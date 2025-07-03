@@ -7,16 +7,20 @@
     "start": "node ./dist/index.js",
     "server": "nodemon ./dist/index.js",
     "watch": "tsc -w",
-    "build": "tsc"
+    "build": "tsc",
+    "dev": "concurrently \"npm run server\" \"npm run watch\""
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@prisma/client": "^6.11.1",
+    "concurrently": "^9.2.0",
     "cors": "^2.8.5",
     "dotenv": "^17.0.1",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "prisma": "^6.11.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
