@@ -1,11 +1,11 @@
-import React from 'react'
+import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import { HeroSectionOne } from "@/components/base/HeroSec";
 
-function App() {
+export default function Home() {
   return (
-    <div className='flex flex-col items-center justify-center h-screen bg-gray-100 text-green-600'>
-      <h1>I am homepage</h1>
-    </div>
-  )
+   <div>
+    <HeroSectionOne/>
+   </div>
+  );
 }
-
-export default App
