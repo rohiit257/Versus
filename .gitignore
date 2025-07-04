@@ -17,6 +17,7 @@ dist/
 coverage/
 # Optional npm cache directory
 .npm
+.next/
 # Optional eslint cache
 .eslintcache
 # Optional stylelint cache
