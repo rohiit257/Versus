@@ -1,0 +1,27 @@
+//git ignore for node.js projects
+# Logs
+logs
+npm-debug.log*
+yarn-debug.log*
+# Dependency directories
+node_modules/
+# Build directories
+dist/
+# Environment files
+.env
+# IDE specific files
+.idea/
+# OS generated files
+.DS_Store
+# Coverage directory used by tools like istanbul
+coverage/
+# Optional npm cache directory
+.npm
+# Optional eslint cache
+.eslintcache
+# Optional stylelint cache
+.stylelintcache
+# Optional cache directory for prettier
+.prettier-cache
+# Optional cache directory for rollup
+.rollup.cache
