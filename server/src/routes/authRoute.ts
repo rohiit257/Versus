@@ -2,7 +2,7 @@ import { Router,Request,Response } from "express";
 import { RegisterSchema } from "../validations/authValidation.js";
 import prisma from "../config/database.js";
 import bcrypt from "bcrypt";
-
+import {v4 as uuid} from "uuid";
 const router = Router();
 
 router.post("/register", async (req: Request, res: Response) => {
@@ -21,8 +21,11 @@ router.post("/register", async (req: Request, res: Response) => {
             return res.status(400).json({ message: "User already exists with this email" });
         }
 
+
         const salt = await bcrypt.genSalt(10)
         const hashedPassword = await bcrypt.hash(payload.password, salt);
+
+        const token  = await bcrypt.hash(uuid(),salt);
         
         await prisma.user.create({
             data:{
