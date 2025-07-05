@@ -17,6 +17,7 @@
   "dependencies": {
     "@prisma/client": "^6.11.1",
     "bcrypt": "^6.0.0",
+    "bullmq": "^5.56.1",
     "concurrently": "^9.2.0",
     "cors": "^2.8.5",
     "dotenv": "^17.0.1",

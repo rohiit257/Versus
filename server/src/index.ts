@@ -10,8 +10,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
-app.get("/", (req: Request, res: Response) => {
+app.get("/", async (req: Request, res: Response) => {
     return res.send("yo ssupppppppp");
+ 
 });
 
 // // Test mail endpoint
@@ -29,6 +30,8 @@ app.get("/", (req: Request, res: Response) => {
 //     }
 // });
 
+import './jobs/index.js'; // Import jobs to ensure they are registered
+
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     console.log(`http://localhost:${PORT}`);
@@ -37,5 +40,6 @@ app.listen(PORT, () => {
 
 //routes
 import authRoute from './routes/authRoute.js';
+import { emailQueue } from './jobs/emailJob.js';
 app.use('/api/auth/v1', authRoute);
 
