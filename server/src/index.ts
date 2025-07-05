@@ -46,6 +46,8 @@ app.listen(PORT, () => {
 
 //routes
 import authRoute from './routes/authRoute.js';
+import verifyemailRoute from './routes/verifyEmailRoutes.js';
 import { emailQueue } from './jobs/emailJob.js';
 app.use('/api/auth/v1', authRoute);
+app.use('/',verifyemailRoute)
 

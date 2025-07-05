@@ -1,0 +1,74 @@
+<!-- filepath: c:\Users\User\Desktop\Versus\server\src\views\email\email-veify.ejs -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Email Verification</title>
+    <style>
+      body {
+        background: #111111;
+        color: #fffbe7;
+        font-family: Arial, sans-serif;
+        padding: 0;
+        margin: 0;
+      }
+      .container {
+        max-width: 480px;
+        margin: 40px auto;
+        background: #18181b;
+        border-radius: 12px;
+        box-shadow: 0 4px 24px rgba(255, 221, 51, 0.08);
+        padding: 32px 24px;
+        text-align: center;
+        border: 2px solid #ffd600;
+      }
+      .btn {
+        display: inline-block;
+        margin-top: 24px;
+        padding: 12px 32px;
+        background: #ffd600;
+        color: #18181b;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 1.1rem;
+        transition: background 0.2s, color 0.2s;
+        box-shadow: 0 2px 8px rgba(255, 214, 0, 0.15);
+      }
+      .btn:hover {
+        background: #ffe066;
+        color: #111111;
+      }
+      .greeting {
+        font-size: 1.2rem;
+        margin-bottom: 16px;
+        color: #ffd600;
+      }
+      .footer {
+        margin-top: 32px;
+        font-size: 0.9rem;
+        color: #bdbdbd;
+      }
+      a {
+        color: #ffd600;
+        word-break: break-all;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2 style="color:#ffd600;">Email Verification</h2>
+      <p class="greeting">Hello <%= name %>,</p>
+      <p>Thank you for registering! Please verify your email address by clicking the button below:</p>
+      <a href="<%= url %>" target="_blank" class="btn">Verify Email</a>
+      <p style="margin-top:20px;">Or copy and paste this link in your browser:</p>
+      <p>
+        <a href="<%= url %>"><%= url %></a>
+      </p>
+      <div class="footer">
+        If you did not create an account, you can safely ignore this email.<br>
+        &copy; <%= new Date().getFullYear() %> Versus
+      </div>
+    </div>
+  </body>
+</html>

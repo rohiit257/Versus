@@ -3,6 +3,10 @@ import { RegisterSchema } from "../validations/authValidation.js";
 import prisma from "../config/database.js";
 import bcrypt from "bcrypt";
 import {v4 as uuid} from "uuid";
+import { renderEmailEJS } from "../helper..js";
+import { name } from "ejs";
+import { sendMail } from "../config/mail.js";
+import { emailQueue, emailQueueName } from "../jobs/emailJob.js";
 const router = Router();
 
 router.post("/register", async (req: Request, res: Response) => {
@@ -26,15 +30,23 @@ router.post("/register", async (req: Request, res: Response) => {
         const hashedPassword = await bcrypt.hash(payload.password, salt);
 
         const token  = await bcrypt.hash(uuid(),salt);
+        const url = `${process.env.APP_URL}/verify-email?email=${payload.email}&token=${token}`;
+
+        const emailBody = await renderEmailEJS("email-veify", {name: payload.name, url: url});
+
+        await emailQueue.add(emailQueueName,{to: payload.email, subject: "Versus Email Verification", body: emailBody});
         
         await prisma.user.create({
+
             data:{
                 name:payload.name,
                 email:payload.email,    
-                password:hashedPassword
+                password:hashedPassword,
+                email_verification_token: token,
+
             }
         })
-        return res.status(201).json({ message: "User registered successfully" });
+        return res.status(201).json({ message: "Please Check Your Email" });
 
 
     } catch (error) {
