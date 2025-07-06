@@ -21,7 +21,7 @@ router.get("/verify-email",async (req:Request,res:Response) => {
                 where: { email: String(email) },
                 data: {email_verification_token: null, email_verified_at: new Date().toISOString()}
             });
-            return res.status(200).json({ message: "Email verified successfully" });
+            return res.redirect(process.env.FRONTEND_URL || "http://localhost:3000/verified");
         }
     }
     return res.status(400).json({ message: "Invalid verification link" });

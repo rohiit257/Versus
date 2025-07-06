@@ -3,11 +3,22 @@ import "dotenv/config";
 import { sendMail } from './config/mail.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import cors from 'cors';
 
 const _dirname = path.dirname(fileURLToPath(import.meta.url));
 
+
+
 const app: Application = express();
 const PORT = process.env.PORT || 8000;
+
+app.use(
+    cors({
+      origin:'http://localhost:3000',
+      method: ["GET", "POST", "DELETE", "PUT"],
+      credentials: true,
+    })
+  );
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

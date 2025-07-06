@@ -10,7 +10,7 @@
     "build": "tsc && npm run copy-files",
     "dev": "concurrently \"npm run server\" \"npm run watch\" \"npm run watch-views\"",
     "copy-files": "copyfiles -u 1 \"src/views/**/*\"dist/",
-    "watch-views": "node --watch src/views -e ejs -x \"npm run copy-files\""
+    "watch-views": "nodemon --watch src/views -e ejs -x \"npm run copy-files\""
   },
   "keywords": [],
   "author": "",
