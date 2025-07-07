@@ -19,7 +19,7 @@ app.use(
       credentials: true,
     })
   );
-
+app.use(applimiter)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -59,6 +59,7 @@ app.listen(PORT, () => {
 import authRoute from './routes/authRoute.js';
 import verifyemailRoute from './routes/verifyEmailRoutes.js';
 import { emailQueue } from './jobs/emailJob.js';
+import { applimiter } from './config/rateLimit.js';
 app.use('/api/auth/v1', authRoute);
 app.use('/',verifyemailRoute)
 

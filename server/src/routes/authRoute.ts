@@ -7,9 +7,10 @@ import { renderEmailEJS } from "../helper..js";
 import { emailQueue, emailQueueName } from "../jobs/emailJob.js";
 import jwt from "jsonwebtoken"
 import authMiddleware from "../middleware/authMiddleware.js";
+import { authlimiter } from "../config/rateLimit.js";
 const router = Router();
 
-router.post("/register", async (req: Request, res: Response) => {
+router.post("/register", authlimiter, async (req: Request, res: Response) => {
     try {
 
         const body = req.body;
@@ -56,7 +57,7 @@ router.post("/register", async (req: Request, res: Response) => {
     }
 });
 
-router.post("/login", async (req:Request,res:Response) =>{
+router.post("/login", authlimiter , async (req:Request,res:Response) =>{
     try {
 
         const body = req.body
