@@ -25,6 +25,9 @@ import {
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
 import { motion } from "framer-motion"
 import Link from 'next/link'
+import { signIn } from "next-auth/react"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner" // or your preferred toast library
 
 const formSchema = z.object({
     email: z.string().email({ message: "Please enter a valid email address" }),
@@ -33,6 +36,8 @@ const formSchema = z.object({
 
 export default function Login() {
     const [showPassword, setShowPassword] = React.useState(false)
+    const [isLoading, setIsLoading] = React.useState(false)
+    const router = useRouter()
     
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -42,9 +47,42 @@ export default function Login() {
         },
     })
 
-    const onSubmit = (data: z.infer<typeof formSchema>) => {
-        console.log(data)
-        // Handle form submission logic here
+    const onSubmit = async (data: z.infer<typeof formSchema>) => {
+        setIsLoading(true)
+        
+        try {
+            console.log('🚀 Starting login process...')
+            console.log('📧 Login data:', { email: data.email, password: '***' })
+            
+            const result = await signIn("credentials", {
+                email: data.email,
+                password: data.password,
+                redirect: false,
+            })
+
+            console.log('🔍 SignIn result:', result)
+            console.log('✅ Result OK:', result?.ok)
+            console.log('❌ Result Error:', result?.error)
+            console.log('🔗 Result URL:', result?.url)
+            console.log('📊 Result Status:', result?.status)
+
+            if (result?.error) {
+                console.error('❌ Authentication failed:', result.error)
+                toast.error(`Authentication failed: ${result.error}`)
+            } else if (result?.ok) {
+                console.log('✅ Authentication successful!')
+                toast.success("Successfully signed in!")
+                router.push("/dashboard")
+            } else {
+                console.error('❓ Unexpected result:', result)
+                toast.error("Something went wrong during login")
+            }
+        } catch (error) {
+            console.error("💥 Login error:", error)
+            toast.error("An error occurred during login")
+        } finally {
+            setIsLoading(false)
+        }
     }
 
     return (
@@ -86,7 +124,8 @@ export default function Login() {
                                                         placeholder="Enter your email"
                                                         type="email"
                                                         {...field}
-                                                        className="pl-10 h-12 bg-black border border-neutral-700 text-white placeholder-neutral-500 focus:ring-2 focus:ring-white/40 transition"
+                                                        disabled={isLoading}
+                                                        className="pl-10 h-12 bg-black border border-neutral-700 text-white placeholder-neutral-500 focus:ring-2 focus:ring-white/40 transition disabled:opacity-50"
                                                     />
                                                 </div>
                                             </FormControl>
@@ -109,7 +148,8 @@ export default function Login() {
                                                         placeholder="Enter your password"
                                                         type={showPassword ? "text" : "password"}
                                                         {...field}
-                                                        className="pl-10 pr-10 h-12 bg-black border border-neutral-700 text-white placeholder-neutral-500 focus:ring-2 focus:ring-white/40 transition"
+                                                        disabled={isLoading}
+                                                        className="pl-10 pr-10 h-12 bg-black border border-neutral-700 text-white placeholder-neutral-500 focus:ring-2 focus:ring-white/40 transition disabled:opacity-50"
                                                     />
                                                     <Button
                                                         type="button"
@@ -117,6 +157,7 @@ export default function Login() {
                                                         size="sm"
                                                         className="absolute right-0 top-0 h-12 px-3 hover:bg-transparent"
                                                         onClick={() => setShowPassword(!showPassword)}
+                                                        disabled={isLoading}
                                                     >
                                                         {showPassword ? (
                                                             <EyeOff className="h-4 w-4 text-neutral-500" />
@@ -147,9 +188,10 @@ export default function Login() {
                                 >
                                     <Button 
                                         type="submit" 
-                                        className="w-full h-12 bg-white text-black font-bold shadow hover:bg-neutral-200 transition"
+                                        disabled={isLoading}
+                                        className="w-full h-12 bg-white text-black font-bold shadow hover:bg-neutral-200 transition disabled:opacity-50"
                                     >
-                                        Sign In
+                                        {isLoading ? "Signing in..." : "Sign In"}
                                     </Button>
                                 </motion.div>
                             </form>

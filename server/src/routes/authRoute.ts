@@ -4,8 +4,6 @@ import prisma from "../config/database.js";
 import bcrypt from "bcrypt";
 import { v4 as uuid } from "uuid";
 import { renderEmailEJS } from "../helper..js";
-import { name } from "ejs";
-import { sendMail } from "../config/mail.js";
 import { emailQueue, emailQueueName } from "../jobs/emailJob.js";
 import jwt from "jsonwebtoken"
 import authMiddleware from "../middleware/authMiddleware.js";
