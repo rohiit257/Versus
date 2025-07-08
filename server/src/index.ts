@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
 import { applimiter } from './config/rateLimit.js';
+import fileUpload from 'express-fileupload'
 
 
 const _dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -23,6 +24,10 @@ app.use(
 app.use(applimiter)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(fileUpload({
+    useTempFiles : true,
+    tempFileDir : '/tmp/'
+}));
 
 app.set("view engine", "ejs");
 app.set("views", path.resolve(_dirname, "./views"));
@@ -61,9 +66,12 @@ import authRoute from './routes/authRoute.js';
 import verifyemailRoute from './routes/verifyEmailRoutes.js';
 import { emailQueue } from './jobs/emailJob.js';
 import passwordRoute from './routes/passwordRoute.js'
+import postRoute from './routes/postRoute.js'
+import authMiddleware from './middleware/authMiddleware.js';
 app.use('/api/auth/v1', authRoute);
 app.use('/',verifyemailRoute)
 app.use('/api/auth/v1',passwordRoute)
+app.use('/api/v1/post',postRoute)
 
 
 

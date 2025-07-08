@@ -25,6 +25,7 @@
     "dotenv": "^17.0.1",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
+    "express-fileupload": "^1.5.2",
     "express-rate-limit": "^7.5.1",
     "jsonwebtoken": "^9.0.2",
     "moment": "^2.30.1",
@@ -37,10 +38,12 @@
     "@types/cors": "^2.8.19",
     "@types/ejs": "^3.1.5",
     "@types/express": "^5.0.3",
+    "@types/express-fileupload": "^1.5.1",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/nodemailer": "^6.4.17",
     "copyfiles": "^2.4.1",
     "nodemon": "^3.1.10",
+    "prettier-plugin-prisma": "^5.0.0",
     "prisma": "^6.11.1",
     "typescript": "^5.8.3"
   }
