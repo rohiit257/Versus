@@ -5,10 +5,6 @@ import axios from "axios"
 
 
 
-
-
-
-
 export type customSession = {
     user?: customUser,
     expires: ISODateString

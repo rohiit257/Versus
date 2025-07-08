@@ -173,13 +173,15 @@ export default function Login() {
                                 />
                                 
                                 <div className="flex items-center justify-between pt-2">
-                                    <Button
-                                        type="button"
-                                        variant="link"
-                                        className="text-sm text-yellow-400 hover:text-yellow-300 p-0 h-auto font-normal"
-                                    >
-                                        Forgot password?
-                                    </Button>
+                                    <p className='text-sm text-neutral-400'>
+                                        <Link
+                                    href="/forget-password"
+                                    className="text-yellow-400 hover:text-yellow-300 underline"
+                                >
+                                    Forget Password?
+                                </Link>
+                                    </p>
+                                     
                                 </div>
 
                                 <motion.div

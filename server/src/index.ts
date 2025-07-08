@@ -1,9 +1,10 @@
 import express, { Application, Request, Response } from 'express';
 import "dotenv/config";
-import { sendMail } from './config/mail.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors';
+import { applimiter } from './config/rateLimit.js';
+
 
 const _dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -59,7 +60,10 @@ app.listen(PORT, () => {
 import authRoute from './routes/authRoute.js';
 import verifyemailRoute from './routes/verifyEmailRoutes.js';
 import { emailQueue } from './jobs/emailJob.js';
-import { applimiter } from './config/rateLimit.js';
+import passwordRoute from './routes/passwordRoute.js'
 app.use('/api/auth/v1', authRoute);
 app.use('/',verifyemailRoute)
+app.use('/api/auth/v1',passwordRoute)
+
+
 
