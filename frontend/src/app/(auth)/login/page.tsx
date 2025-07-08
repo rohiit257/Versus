@@ -72,7 +72,7 @@ export default function Login() {
             } else if (result?.ok) {
                 console.log('✅ Authentication successful!')
                 toast.success("Successfully signed in!")
-                router.push("/dashboard")
+                router.push("/")
             } else {
                 console.error('❓ Unexpected result:', result)
                 toast.error("Something went wrong during login")
