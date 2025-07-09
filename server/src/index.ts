@@ -21,6 +21,7 @@ app.use(
       credentials: true,
     })
   );
+app.use(express.static("public"))
 app.use(applimiter)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
