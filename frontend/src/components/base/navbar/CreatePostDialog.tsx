@@ -111,7 +111,7 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
       formData.append("expire_at", values.expireAt.toISOString()); // Now values.expireAt is properly a Date object
       formData.append("image", selectedImage);
 
-      const response = await axios.post("http://localhost:8000/api/v1/post/", formData, {
+      const response = await axios.post("http://localhost:8000/api/post/v1", formData, {
         headers: {
           Authorization: user.token,
           "Content-Type": "multipart/form-data",

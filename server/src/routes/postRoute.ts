@@ -97,7 +97,30 @@ router.get("/", authMiddleware, async (req: Request, res: Response) => {
     }
 })
 
-router.get("/:id", authMiddleware, async (req: Response, res: Response) => {
+router.get("/all", async (req: Request, res: Response) => {
+  try {
+    const posts = await prisma.post.findMany({
+      orderBy:{
+        created_at:"desc"
+      }
+    });
+
+    return res.status(200).json({
+      status: 200,
+      message: "Posts fetched successfully",
+      data: posts,
+    });
+  } catch (error) {
+    console.error("Error fetching posts:", error);
+    return res.status(500).json({
+      status: 500,
+      message: "An error occurred while fetching posts",
+    });
+  }
+});
+
+
+router.get("/:id", authMiddleware, async (req: Request, res: Response) => {
     try {
         const { id } = req.params
         const post = await prisma.post.findUnique({
@@ -117,6 +140,7 @@ router.get("/:id", authMiddleware, async (req: Response, res: Response) => {
         })
     }
 })
+
 
 
 

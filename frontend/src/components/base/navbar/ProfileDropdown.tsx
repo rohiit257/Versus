@@ -65,7 +65,7 @@ export default function ProfileDropdown({ user }: ProfileDropdownProps) {
             </div>
             <div>
               <p className="font-semibold">{user.name}</p>
-              <p className="text-xs text-zinc-400">@{user.username || "user"}</p>
+              <p className="text-xs text-zinc-400">@{user.email|| "user"}</p>
             </div>
           </div>
         </DropdownMenuLabel>

@@ -2,13 +2,13 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { Home, Plus, TrendingUp, Bell, User } from "lucide-react";
+import { Home, Plus, TrendingUp, Bell, User, LogIn } from "lucide-react";
 import { useState } from "react";
 
 import { customUser } from "@/app/api/auth/[...nextauth]/options";
 import CreatePostDialog from "./CreatePostDialog";
 import ProfileDropdown from "./ProfileDropdown";
-
+import { useSession } from "next-auth/react";
 
 interface NavbarClientProps {
   user?: customUser;
@@ -16,6 +16,10 @@ interface NavbarClientProps {
 
 export default function NavbarClient({ user }: NavbarClientProps) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const { data: session } = useSession();
+
+  // Check if user is authenticated (either through prop or session)
+  const isAuthenticated = user || session?.user;
 
   return (
     <motion.nav
@@ -83,64 +87,73 @@ export default function NavbarClient({ user }: NavbarClientProps) {
 
           {/* Navigation Icons */}
           <div className="flex items-center space-x-6">
-            <div className="hidden md:flex items-center space-x-6">
-              <NavIcon href="/" icon={Home} tooltip="Home" isActive />
-              <NavIcon href="/timeline" icon={TrendingUp} tooltip="Timeline" />
-              
-              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
-                <button 
-                  onClick={() => setIsCreateDialogOpen(true)}
-                  className="group relative flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-800/50 text-white transition-all duration-300 hover:bg-emerald-500/20 hover:text-emerald-400"
-                >
-                  <Plus size={20} />
-                  <Tooltip text="Create" />
-                </button>
-              </motion.div>
+            {/* Only show navigation icons if user is authenticated */}
+            {isAuthenticated && (
+              <div className="hidden md:flex items-center space-x-6">
+                <NavIcon href="/" icon={Home} tooltip="Home" isActive />
+                <NavIcon href="/timeline" icon={TrendingUp} tooltip="Timeline" />
+                
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+                  <button 
+                    onClick={() => setIsCreateDialogOpen(true)}
+                    className="group relative flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-800/50 text-white transition-all duration-300 hover:bg-emerald-500/20 hover:text-emerald-400"
+                  >
+                    <Plus size={20} />
+                    <Tooltip text="Create" />
+                  </button>
+                </motion.div>
 
-              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
-                <button className="group relative flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-800/50 text-white transition-all duration-300 hover:bg-emerald-500/20 hover:text-emerald-400">
-                  <Bell size={20} />
-                  <div className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full animate-pulse" />
-                  <Tooltip text="Notifications" />
-                </button>
-              </motion.div>
-            </div>
-
-            {/* Profile Dropdown */}
-            {user ? (
-              <ProfileDropdown user={user} />
-            ) : (
-              <Link href="/login">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-800 text-white"
-                >
-                  <User size={20} />
-                </motion.button>
-              </Link>
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+                  <button className="group relative flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-800/50 text-white transition-all duration-300 hover:bg-emerald-500/20 hover:text-emerald-400">
+                    <Bell size={20} />
+                    <div className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full animate-pulse" />
+                    <Tooltip text="Notifications" />
+                  </button>
+                </motion.div>
+              </div>
             )}
 
-            {/* Mobile menu button */}
-            <div className="md:hidden">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-800 text-white"
-              >
-                <User size={20} />
-              </motion.button>
-            </div>
+            {/* Profile Dropdown or Login Button */}
+            {isAuthenticated ? (
+              <ProfileDropdown user={user || session?.user} />
+            ) : (
+              <div className="flex items-center space-x-3">
+                {/* Desktop Login Button */}
+                <Link href="/login" className="hidden md:block">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex items-center space-x-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-all duration-300 hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-500/25"
+                  >
+                    <LogIn size={16} />
+                    <span>Login</span>
+                  </motion.button>
+                </Link>
+
+                {/* Mobile Login Button */}
+                <Link href="/login" className="md:hidden">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600 text-white transition-all duration-300 hover:bg-emerald-500"
+                  >
+                    <LogIn size={20} />
+                  </motion.button>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Create Post Dialog */}
-      <CreatePostDialog 
-        isOpen={isCreateDialogOpen}
-        onClose={() => setIsCreateDialogOpen(false)}
-        user={user}
-      />
+      {/* Create Post Dialog - Only show if user is authenticated */}
+      {isAuthenticated && (
+        <CreatePostDialog 
+          isOpen={isCreateDialogOpen}
+          onClose={() => setIsCreateDialogOpen(false)}
+          user={user || session?.user}
+        />
+      )}
     </motion.nav>
   );
 }

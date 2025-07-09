@@ -25,8 +25,8 @@ import {
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
 import { motion } from "framer-motion"
 import Link from 'next/link'
-import { signIn } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { signIn, useSession } from "next-auth/react"
+import { redirect, useRouter } from "next/navigation"
 import { toast } from "sonner" // or your preferred toast library
 
 const formSchema = z.object({
@@ -38,6 +38,14 @@ export default function Login() {
     const [showPassword, setShowPassword] = React.useState(false)
     const [isLoading, setIsLoading] = React.useState(false)
     const router = useRouter()
+
+    const {data:session} = useSession()
+
+    const user = session?.user as {token?:string} | undefined
+
+    if(user){
+        redirect("/timeline")
+    }
     
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),

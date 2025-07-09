@@ -26,6 +26,8 @@ import { User, Mail, Lock, CheckCircle2, Loader2 } from "lucide-react"
 import Link from 'next/link'
 import axios from 'axios'
 import { toast } from "sonner"
+import { useSession } from 'next-auth/react'
+import { redirect } from 'next/navigation'
 
 const formSchema = z.object({
     name: z.string().min(2, { message: "Name must be at least 2 characters" }),
@@ -45,6 +47,14 @@ const formSchema = z.object({
 export default function Register() {
     const [isLoading, setIsLoading] = useState(false)
     const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error', message: string } | null>(null)
+
+        const {data:session} = useSession()
+    
+        const user = session?.user as {token?:string} | undefined
+    
+        if(user){
+            redirect("/timeline")
+        }
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),

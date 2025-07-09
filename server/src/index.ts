@@ -72,7 +72,7 @@ import authMiddleware from './middleware/authMiddleware.js';
 app.use('/api/auth/v1', authRoute);
 app.use('/',verifyemailRoute)
 app.use('/api/auth/v1',passwordRoute)
-app.use('/api/v1/post',postRoute)
+app.use('/api/post/v1',postRoute)
 
 
 
