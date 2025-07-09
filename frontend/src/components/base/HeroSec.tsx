@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import Navbar from "./Navbar";
+import Navbar from "./navbar/NavbarClient";
 
 export function HeroSectionOne() {
   return (

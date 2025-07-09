@@ -4,54 +4,66 @@ import fileUpload, { UploadedFile } from "express-fileupload";
 import { imageValidator, uploadImage } from "../helper..js";
 import prisma from "../config/database.js";
 import authMiddleware from "../middleware/authMiddleware.js";
-import { number } from "zod/v4";
+import { ZodError } from "zod";
 
 const router = Router()
 
 router.post("/", authMiddleware, async (req: Request, res: Response) => {
-    try {
-        const body = req.body
-        const paylaod = PostScheme.parse(body)
+  try {
+    const body = req.body;
 
-        if (req.files?.image) {
-            const image = req.files?.image as UploadedFile
-            const validimage = imageValidator(image.size, image.mimetype)
+    // 🧪 Validate request body using Zod
+    const payload = PostScheme.parse(body);
 
-            if (validimage) {
-                return res.status(422).json({
-                    errors: { image: validimage }
-                })
-            }
+    // 📷 Handle image validation
+    const image = req.files?.image as UploadedFile | undefined;
 
-            paylaod.image = await uploadImage(image)
-        }
-        else {
-            return res.status(422).json({
-                errors: { image: "image field is required" }
-            })
-        }
-
-
-        await prisma.post.create({
-            data: {
-                ...paylaod,
-                user_id: req.user.id,
-                expire_at: new Date(paylaod.expire_at)
-            }
-        })
-
-        return res.status(200).json({
-            message: "post created"
-
-        })
-
-
-
-
-    } catch (error) {
-
+    if (!image) {
+      return res.status(422).json({
+        errors: { image: "Image field is required" },
+      });
     }
-})
+
+    const imageError = imageValidator(image.size, image.mimetype);
+    if (imageError) {
+      return res.status(422).json({
+        errors: { image: imageError },
+      });
+    }
+
+    // ⬆️ Upload image and attach to payload
+    payload.image = await uploadImage(image);
+
+    // 💾 Create post in DB
+    await prisma.post.create({
+      data: {
+        ...payload,
+        user_id: req.user.id,
+        expire_at: new Date(payload.expire_at),
+      },
+    });
+
+    return res.status(200).json({
+      message: "Post created successfully",
+    });
+
+  } catch (error) {
+    // 🛑 Zod validation error
+    if (error instanceof ZodError) {
+      const fieldErrors = error.flatten().fieldErrors;
+      return res.status(422).json({
+        errors: fieldErrors,
+      });
+    }
+
+    // 🧠 Unexpected error
+    console.error("Unexpected error while creating post:", error);
+
+    return res.status(500).json({
+      message: "Something went wrong while creating the post.",
+    });
+  }
+});
 
 router.get("/", authMiddleware, async (req: Request, res: Response) => {
     try {

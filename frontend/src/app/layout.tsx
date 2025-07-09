@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "@/components/ui/sonner"
+import { Toaster } from "@/components/ui/sonner";
+import { SessionProviderWrapper } from "@/components/providers/SessionProviderWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,19 +29,21 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased dark`}
       >
-        {children}
-        <Toaster
-          position="top-right"
-          richColors
-          closeButton
-          toastOptions={{
-            className: "bg-neutral-900 text-white",
-            style: {
-              backgroundColor: "var(--geist-background)",
-              color: "var(--geist-text)",
-            },
-          }}
-        />
+        <SessionProviderWrapper>
+          {children}
+          <Toaster
+            position="top-right"
+            richColors
+            closeButton
+            toastOptions={{
+              className: "bg-neutral-900 text-white",
+              style: {
+                backgroundColor: "var(--geist-background)",
+                color: "var(--geist-text)",
+              },
+            }}
+          />
+        </SessionProviderWrapper>
       </body>
     </html>
   );
