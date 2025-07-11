@@ -1,453 +1,361 @@
-"use client";
-
-import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
-import { 
-  MessageCircle, 
-  Share2, 
-  Clock, 
-  TrendingUp, 
-  Timer, 
+"use client"
+import { motion, AnimatePresence } from "framer-motion"
+import { useState, useEffect } from "react"
+import {
+  MessageCircle,
+  Share2,
+  Clock,
+  TrendingUp,
+  Timer,
   CheckCircle,
   Wifi,
   WifiOff,
-  Loader2
-} from "lucide-react";
-import socket, { socketManager } from "@/lib/socket";
-import { useSession } from "next-auth/react";
+  Loader2,
+  Heart,
+  MoreHorizontal,
+  Bookmark,
+  Flag,
+  Eye,
+} from "lucide-react"
+import CountUp from "react-countup"
+import socket, { socketManager } from "@/lib/socket"
+import { useSession } from "next-auth/react"
 
 interface TimelinePostProps {
   post: {
-    id: string;
+    id: string
     user: {
-      name: string;
-      username: string;
-      avatar?: string;
-    };
-    title: string;
-    description?: string;
-    optionA: {
-      id: string;
-      title: string;
-      description: string;
-      votes: number;
-    };
-    optionB: {
-      id: string;
-      title: string;
-      description: string;
-      votes: number;
-    };
-    totalVotes: number;
-    comments: number;
-    timeAgo: string;
-    category?: string;
-    expire_in?: string;
-  };
-  index: number;
+      name: string
+      username: string
+      avatar?: string
+      verified?: boolean
+    }
+    title: string
+    description?: string
+    options: Array<{
+      id: string
+      title: string
+      votes: number
+    }>
+    totalVotes: number
+    comments: number
+    likes: number
+    timeAgo: string
+    category?: string
+    expiresAt?: string
+    isHot?: boolean
+    isTrending?: boolean
+  }
+  index: number
 }
 
-export default function TimelinePost({ post, index }: TimelinePostProps) {
-  const [userVote, setUserVote] = useState<"A" | "B" | null>(null);
-  const [showComments, setShowComments] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
-  const [isVoting, setIsVoting] = useState(false);
+export default function EnhancedTimelinePost({ post, index }: TimelinePostProps) {
+  const [userVote, setUserVote] = useState<string | null>(null)
+  const [showComments, setShowComments] = useState(false)
+  const [isConnected, setIsConnected] = useState(false)
+  const [isVoting, setIsVoting] = useState(false)
+  const [voteTimeout, setVoteTimeout] = useState<NodeJS.Timeout | null>(null)
+  const [hasVoted, setHasVoted] = useState(false)
+  const [showActions, setShowActions] = useState(false)
 
-  const {data:session} = useSession()
+  const { data: session } = useSession()
+  const user = session?.user as { token?: string; id?: string; email?: string } | undefined
 
-  const user = session?.user as {token?:string} | undefined
-  
-  // Local state for vote counts (will be updated via socket)
-  const [localVotes, setLocalVotes] = useState({
-    optionA: post.optionA.votes,
-    optionB: post.optionB.votes,
-    total: post.totalVotes
-  });
+  const [optionVotes, setOptionVotes] = useState(post.options.map(opt => opt.votes));
+  const [totalVotes, setTotalVotes] = useState(post.totalVotes);
+  const [animateVote, setAnimateVote] = useState<{ optionId: string | null, trigger: boolean }>({ optionId: null, trigger: false });
 
   useEffect(() => {
-    // Check initial connection status
     setIsConnected(socketManager.isConnected());
-
-    // Socket event listeners
-    const handleConnect = () => {
-      console.log('🟢 Socket connected');
-      setIsConnected(true);
-    };
-
-    const handleDisconnect = () => {
-      console.log('🔴 Socket disconnected');
-      setIsConnected(false);
-    };
-
+    const storedVote = localStorage.getItem(`vote_${post.id}_${user?.id || user?.email}`);
+    if (storedVote) {
+      setUserVote(storedVote);
+      setHasVoted(true);
+    }
+    const handleConnect = () => setIsConnected(true);
+    const handleDisconnect = () => setIsConnected(false);
     const handleVoteUpdate = (data: any) => {
-      console.log('📊 Vote update received:', data);
-      
-      // Check if this update is for the current post
-      if (data.post_id === parseInt(post.id)) {
-        // Handle your API structure where options come as array
-        let newOptionAVotes = localVotes.optionA;
-        let newOptionBVotes = localVotes.optionB;
-        
+      if (data.post_id === Number.parseInt(post.id)) {
         if (data.options && Array.isArray(data.options)) {
-          // If backend sends options array
-          const optionA = data.options.find((opt: any) => opt.id === parseInt(post.optionA.id));
-          const optionB = data.options.find((opt: any) => opt.id === parseInt(post.optionB.id));
-          
-          newOptionAVotes = optionA ? optionA.count : localVotes.optionA;
-          newOptionBVotes = optionB ? optionB.count : localVotes.optionB;
-        } else {
-          // Handle individual vote count updates
-          newOptionAVotes = data.optionA_votes !== undefined ? data.optionA_votes : 
-                           data.option_a_votes !== undefined ? data.option_a_votes : localVotes.optionA;
-          newOptionBVotes = data.optionB_votes !== undefined ? data.optionB_votes : 
-                           data.option_b_votes !== undefined ? data.option_b_votes : localVotes.optionB;
+          const newVotes = post.options.map(opt => {
+            const updated = data.options.find((o: any) => o.id === Number(opt.id));
+            return updated ? updated.count : opt.votes;
+          });
+          setOptionVotes(newVotes);
+          setTotalVotes(newVotes.reduce((sum, v) => sum + v, 0));
         }
-        
-        setLocalVotes({
-          optionA: newOptionAVotes,
-          optionB: newOptionBVotes,
-          total: newOptionAVotes + newOptionBVotes
-        });
-        
-        // Update user vote if provided
-        if (data.user_vote) {
+        if (data.user_vote && data.user_id === (user?.id || user?.email)) {
           setUserVote(data.user_vote);
+          setHasVoted(true);
+          localStorage.setItem(`vote_${post.id}_${user?.id || user?.email}`, data.user_vote);
         }
-        
         setIsVoting(false);
+        if (voteTimeout) {
+          clearTimeout(voteTimeout);
+          setVoteTimeout(null);
+        }
       }
     };
 
-    const handleVoteError = (error: any) => {
-      console.error('❌ Vote error:', error);
-      setIsVoting(false);
-      // You could show a toast notification here
-    };
+    const handleVoteSuccess = (data: any) => {
+      if (data.post_id === Number.parseInt(post.id) && data.user_id === (user?.id || user?.email)) {
+        setHasVoted(true)
+        setIsVoting(false)
 
-    // Add event listeners
-    socket.on('connect', handleConnect);
-    socket.on('disconnect', handleDisconnect);
-    socket.on(`vote-update-${post.id}`, handleVoteUpdate);
-    socket.on('vote-update', handleVoteUpdate); // Fallback for general updates
-    socket.on('vote-error', handleVoteError);
-
-    // Cleanup on unmount
-    return () => {
-      socket.off('connect', handleConnect);
-      socket.off('disconnect', handleDisconnect);
-      socket.off(`vote-update-${post.id}`, handleVoteUpdate);
-      socket.off('vote-update', handleVoteUpdate);
-      socket.off('vote-error', handleVoteError);
-    };
-  }, [post.id, localVotes.optionA, localVotes.optionB]);
-
-  const handleVote = async (option: "A" | "B") => {
-    if (!isConnected) {
-      console.warn('⚠️ Socket not connected');
-      return;
-    }
-
-    if (isVoting) {
-      console.warn('⚠️ Already voting...');
-      return;
-    }
-
-    setIsVoting(true);
-    
-    const optionId = option === "A" ? post.optionA.id : post.optionB.id;
-    
-    // Optimistic update
-    const previousVote = userVote;
-    setUserVote(option);
-
-    // Prepare vote data
-    const voteData = {
-      post_id: parseInt(post.id),
-      option_id: optionId,
-      option: option,
-      user_id: user.id, // Replace with actual user ID
-    };
-
-    console.log('🗳️ Emitting vote:', voteData);
-
-    try {
-      // Emit vote to server
-      socket.emit(`voting-${post.id}`, voteData);
-      
-      // Also try the general voting event as fallback
-      socket.emit('vote', voteData);
-      
-      // Set a timeout to reset voting state if no response
-      setTimeout(() => {
-        if (isVoting) {
-          console.warn('⏰ Vote timeout - resetting state');
-          setIsVoting(false);
-          setUserVote(previousVote); // Revert optimistic update
+        if (data.option) {
+          localStorage.setItem(`vote_${post.id}_${user?.id || user?.email}`, data.option)
         }
+
+        if (voteTimeout) {
+          clearTimeout(voteTimeout)
+          setVoteTimeout(null)
+        }
+      }
+    }
+
+    const handleVoteError = (error: any) => {
+      setIsVoting(false)
+      setUserVote(null)
+      setHasVoted(false)
+
+      if (voteTimeout) {
+        clearTimeout(voteTimeout)
+        setVoteTimeout(null)
+      }
+    }
+
+    socket.on("connect", handleConnect)
+    socket.on("disconnect", handleDisconnect)
+    socket.on(`vote-update-${post.id}`, handleVoteUpdate)
+    socket.on("vote-update", handleVoteUpdate)
+    socket.on("vote-success", handleVoteSuccess)
+    socket.on("vote-error", handleVoteError)
+
+    return () => {
+      socket.off("connect", handleConnect)
+      socket.off("disconnect", handleDisconnect)
+      socket.off(`vote-update-${post.id}`, handleVoteUpdate)
+      socket.off("vote-update", handleVoteUpdate)
+      socket.off("vote-success", handleVoteSuccess)
+      socket.off("vote-error", handleVoteError)
+
+      if (voteTimeout) {
+        clearTimeout(voteTimeout)
+      }
+    }
+  }, [post.id, voteTimeout, user?.id, user?.email])
+
+  if (!post.options || post.options.length < 2) {
+    return null;
+  }
+
+  const handleVote = async (optionId: string) => {
+    if (!isConnected || isVoting || hasVoted || !user) return;
+    setIsVoting(true);
+    setUserVote(optionId);
+    setAnimateVote({ optionId, trigger: true });
+    // Optimistically increment the vote count for the selected option
+    setOptionVotes(prevVotes => {
+      const idx = post.options.findIndex(opt => opt.id === optionId);
+      if (idx === -1) return prevVotes;
+      const newVotes = [...prevVotes];
+      newVotes[idx] = newVotes[idx] + 1;
+      setTotalVotes(tot => tot + 1);
+      return newVotes;
+    });
+    const voteData = {
+      post_id: Number.parseInt(post.id),
+      option_id: Number.parseInt(optionId),
+      user_id: user.id || user.email || "anonymous",
+      user_token: user.token,
+      timestamp: new Date().toISOString(),
+    };
+    try {
+      socket.emit("vote", voteData);
+      const timeout = setTimeout(() => {
+        setIsVoting(false);
+        setUserVote(null);
+        setVoteTimeout(null);
       }, 5000);
-      
+      setVoteTimeout(timeout);
     } catch (error) {
-      console.error('❌ Error emitting vote:', error);
       setIsVoting(false);
-      setUserVote(previousVote); // Revert optimistic update
+      setUserVote(null);
     }
   };
 
   const getCategoryColor = (category: string) => {
     const colors = {
-      tech: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-      health: "bg-green-500/20 text-green-400 border-green-500/30",
-      finance: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-      lifestyle: "bg-purple-500/20 text-purple-400 border-purple-500/30",
-      career: "bg-orange-500/20 text-orange-400 border-orange-500/30",
-      travel: "bg-pink-500/20 text-pink-400 border-pink-500/30",
-      default: "bg-gray-500/20 text-gray-400 border-gray-500/30"
-    };
-    return colors[category?.toLowerCase() as keyof typeof colors] || colors.default;
-  };
+      tech: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+      health: "bg-green-500/10 text-green-400 border-green-500/20",
+      finance: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
+      lifestyle: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+      career: "bg-orange-500/10 text-orange-400 border-orange-500/20",
+      travel: "bg-pink-500/10 text-pink-400 border-pink-500/20",
+      default: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
+    }
+    return colors[category?.toLowerCase() as keyof typeof colors] || colors.default
+  }
 
-  // Calculate percentages
-  const totalVotes = localVotes.total || 1; // Avoid division by zero
-  const optionAPercentage = Math.round((localVotes.optionA / totalVotes) * 100);
-  const optionBPercentage = Math.round((localVotes.optionB / totalVotes) * 100);
+  const total = totalVotes || 1;
+  const percentages = optionVotes.map(v => total > 0 ? Math.round((v / total) * 100) : 0);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 50 }}
+    <motion.article
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="relative rounded-2xl border border-zinc-800 bg-zinc-900/50 backdrop-blur-sm p-6 shadow-xl hover:border-zinc-700 transition-all duration-300"
+      transition={{ duration: 0.4, delay: index * 0.05 }}
+      className="relative bg-gradient-to-br from-zinc-900/90 via-zinc-950/80 to-zinc-900/90 border border-zinc-800 rounded-3xl p-8 mb-8 shadow-xl shadow-emerald-500/10 flex flex-col gap-6 transition-all duration-300 hover:shadow-emerald-400/20"
     >
-      {/* Connection Status Indicator */}
-      <div className="absolute top-4 right-4 flex items-center space-x-2">
-        {isConnected ? (
-          <div className="flex items-center space-x-1 text-green-400">
-            <Wifi size={14} />
-            <span className="text-xs">Live</span>
-          </div>
-        ) : (
-          <div className="flex items-center space-x-1 text-red-400">
-            <WifiOff size={14} />
-            <span className="text-xs">Offline</span>
-          </div>
-        )}
-      </div>
-
-      {/* Post Header */}
-      <div className="mb-6 flex items-start justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="h-12 w-12 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
-            <span className="text-lg font-bold text-black">
-              {post.user.name.charAt(0)}
-            </span>
-          </div>
-          <div>
-            <h3 className="font-semibold text-white">{post.user.name}</h3>
-            <p className="text-sm text-emerald-400">{post.user.username}</p>
-          </div>
-        </div>
-        <div className="flex items-center space-x-4 text-zinc-400">
-          <div className="flex items-center space-x-2">
-            <Clock size={16} />
-            <span className="text-sm">{post.timeAgo}</span>
-          </div>
-          {post.expire_in && (
-            <div className="flex items-center space-x-2 text-orange-400">
-              <Timer size={16} />
-              <span className="text-sm">Expires in {post.expire_in}</span>
-            </div>
+      {/* Header: Avatar, Name, Username, Verified, Time, Category */}
+      <div className="flex items-start gap-3 pb-4 border-b border-zinc-800/60 mb-4">
+        <div className="flex-shrink-0 h-12 w-12 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center text-lg font-bold text-zinc-700 dark:text-white">
+          {post.user.avatar ? (
+            <img src={post.user.avatar} alt={post.user.name} className="h-12 w-12 rounded-full object-cover" />
+          ) : (
+            post.user.name.charAt(0)
           )}
         </div>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-zinc-900 dark:text-white">{post.user.name}</span>
+            {post.user.verified && <CheckCircle size={16} className="text-blue-400" />}
+            <span className="text-zinc-500 text-sm">@{post.user.username}</span>
+          </div>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="text-xs text-zinc-400">{post.timeAgo}</span>
+            {post.category && <span className="text-xs text-emerald-500 font-medium">· {post.category}</span>}
+          </div>
+        </div>
       </div>
 
-      {/* Category Badge */}
-      {post.category && (
-        <div className="mb-4">
-          <span className={`inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium ${getCategoryColor(post.category)}`}>
-            {post.category}
-          </span>
-        </div>
-      )}
-
       {/* Post Content */}
-      <div className="mb-6">
-        <h2 className="text-xl font-bold text-white mb-2">{post.title}</h2>
-        {post.description && (
-          <p className="text-zinc-300 leading-relaxed">{post.description}</p>
-        )}
+      <div>
+        <h2 className="text-xl font-bold text-white mb-2 leading-snug">{post.title}</h2>
+        {post.description && <p className="text-zinc-300 text-base leading-relaxed">{post.description}</p>}
       </div>
 
       {/* Voting Options */}
-      <div className="mb-6 space-y-4">
-        {/* Option A */}
-        <motion.div
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.99 }}
-          onClick={() => handleVote("A")}
-          className={`cursor-pointer rounded-xl border p-4 transition-all duration-300 ${
-            userVote === "A"
-              ? "border-emerald-500 bg-emerald-500/10 shadow-lg shadow-emerald-500/20"
-              : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600 hover:bg-zinc-800/70"
-          } ${!isConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="font-semibold text-white">{post.optionA.title}</h4>
-            <div className="flex items-center space-x-2">
-              <span className="text-emerald-400 font-bold">{optionAPercentage}%</span>
-              {userVote === "A" && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="text-emerald-400"
-                >
-                  <CheckCircle size={16} />
-                </motion.div>
-              )}
-              {isVoting && userVote === "A" && (
-                <Loader2 size={16} className="animate-spin text-emerald-400" />
-              )}
-            </div>
-          </div>
-          
-          {/* Progress Bar */}
-          <div className="h-2 bg-zinc-700/50 rounded-full overflow-hidden mb-2">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${optionAPercentage}%` }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full"
-            />
-          </div>
-          
-          <div className="flex items-center justify-between text-sm">
-            <p className="text-zinc-300">{post.optionA.description}</p>
-            <span className="text-emerald-400 font-medium">
-              {localVotes.optionA.toLocaleString()} votes
-            </span>
-          </div>
-        </motion.div>
+      <div className="flex flex-col gap-3 mt-2">
+        {post.options.map((opt, idx) => {
+          const isSelected = userVote === opt.id;
+          return (
+            <motion.button
+              key={opt.id}
+              whileHover={{ scale: !hasVoted && isConnected ? 1.02 : 1 }}
+              whileTap={{ scale: !hasVoted && isConnected ? 0.98 : 1 }}
+              onClick={() => !hasVoted && isConnected && handleVote(opt.id)}
+              disabled={!isConnected || hasVoted || isVoting}
+              className={`relative flex items-center w-full px-6 py-4 rounded-2xl border transition-all duration-200 overflow-hidden
+                ${isSelected ? "border-emerald-500 bg-emerald-900/30 text-emerald-300 shadow-lg shadow-emerald-500/10" :
+                  "border-zinc-700 bg-zinc-900/60 text-zinc-200 hover:bg-zinc-800/80"}
+                ${!isConnected || hasVoted ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
+            >
+              {/* Progress Bar */}
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${percentages[idx]}%` }}
+                transition={{ duration: 1.2, ease: "easeOut" }}
+                className={`absolute left-0 top-0 h-full rounded-2xl z-0 ${isSelected ? "bg-emerald-500/20" : "bg-zinc-700/20"}`}
+                style={{ pointerEvents: 'none' }}
+              />
+              <div className="relative z-10 flex-1 flex flex-col items-start">
+                <span className="font-semibold text-lg">{opt.title}</span>
+                <span className="text-xs mt-1 flex items-center gap-2">
+                  {animateVote.trigger && animateVote.optionId === opt.id && userVote === opt.id
+                    ? <CountUp start={0} end={optionVotes[idx]} duration={1.2} />
+                    : optionVotes[idx]}
+                  <span className="text-zinc-400">votes</span>
+                  <span className="ml-2 px-2 py-0.5 rounded-full bg-zinc-800/60 text-emerald-300 font-semibold text-xs">
+                    {percentages[idx]}%
+                  </span>
+                </span>
+              </div>
+              <div className="ml-4 flex items-center gap-2">
+                {isSelected && !isVoting && <CheckCircle size={20} className="text-emerald-400" />}
+                {isVoting && userVote === opt.id && <Loader2 size={20} className="animate-spin text-emerald-400" />}
+              </div>
+            </motion.button>
+          );
+        })}
+      </div>
+      {/* Optionally, add confetti animation here when a vote is cast */}
 
-        {/* Option B */}
-        <motion.div
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.99 }}
-          onClick={() => handleVote("B")}
-          className={`cursor-pointer rounded-xl border p-4 transition-all duration-300 ${
-            userVote === "B"
-              ? "border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-500/20"
-              : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-600 hover:bg-zinc-800/70"
-          } ${!isConnected ? 'opacity-50 cursor-not-allowed' : ''}`}
+      {/* Actions: Comment, Share */}
+      <div className="flex items-center gap-8 mt-2 text-zinc-500">
+        <button
+          onClick={() => setShowComments(!showComments)}
+          className="flex items-center gap-1 text-sm hover:text-emerald-500 transition-colors"
         >
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="font-semibold text-white">{post.optionB.title}</h4>
-            <div className="flex items-center space-x-2">
-              <span className="text-blue-400 font-bold">{optionBPercentage}%</span>
-              {userVote === "B" && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  className="text-blue-400"
-                >
-                  <CheckCircle size={16} />
-                </motion.div>
-              )}
-              {isVoting && userVote === "B" && (
-                <Loader2 size={16} className="animate-spin text-blue-400" />
-              )}
-            </div>
-          </div>
-          
-          {/* Progress Bar */}
-          <div className="h-2 bg-zinc-700/50 rounded-full overflow-hidden mb-2">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${optionBPercentage}%` }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="h-full bg-gradient-to-r from-blue-400 to-blue-500 rounded-full"
-            />
-          </div>
-          
-          <div className="flex items-center justify-between text-sm">
-            <p className="text-zinc-300">{post.optionB.description}</p>
-            <span className="text-blue-400 font-medium">
-              {localVotes.optionB.toLocaleString()} votes
-            </span>
-          </div>
-        </motion.div>
+          <MessageCircle size={18} />
+          <span>{post.comments}</span>
+        </button>
+        <button
+          className="flex items-center gap-1 text-sm hover:text-blue-500 transition-colors"
+        >
+          <Share2 size={18} />
+          <span>Share</span>
+        </button>
       </div>
 
-      {/* Vote Summary */}
-      <div className="mb-4 text-center">
-        <p className="text-sm text-zinc-500">
-          {localVotes.total.toLocaleString()} total votes
-        </p>
-      </div>
-
-      {/* Post Actions */}
-      <div className="flex items-center justify-between border-t border-zinc-800 pt-4">
-        <div className="flex items-center space-x-6">
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowComments(!showComments)}
-            className="flex items-center space-x-2 text-zinc-400 hover:text-emerald-400 transition-colors"
-          >
-            <MessageCircle size={18} />
-            <span className="text-sm">{post.comments}</span>
-          </motion.button>
-          
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            className="flex items-center space-x-2 text-zinc-400 hover:text-emerald-400 transition-colors"
-          >
-            <Share2 size={18} />
-            <span className="text-sm">Share</span>
-          </motion.button>
-        </div>
-
-        <div className="flex items-center space-x-2 text-zinc-400">
-          <TrendingUp size={16} />
-          <span className="text-sm">
-            {((localVotes.optionA + localVotes.optionB) / Math.max(localVotes.total, 1) * 100).toFixed(0)}% participation
+      {/* Vote/Engagement Info */}
+      <div className="flex items-center gap-4 text-xs text-zinc-400 mt-4">
+        <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-zinc-800/60 border border-zinc-700 font-semibold">
+          <Eye size={14} />
+          {totalVotes} total votes
+        </span>
+        {hasVoted && (
+          <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-900/40 border border-emerald-700 text-emerald-300 font-semibold">
+            <CheckCircle size={14} className="text-emerald-400" />
+            You voted
           </span>
-        </div>
+        )}
+        <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-zinc-800/60 border border-zinc-700">
+          <TrendingUp size={14} />
+          {totalVotes > 0 ? (100).toFixed(0) : 0}% engagement
+        </span>
       </div>
 
-      {/* Comments Section */}
+      {/* Comments Section (minimal, hidden by default) */}
       <AnimatePresence>
         {showComments && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="mt-4 border-t border-zinc-800 pt-4"
+            transition={{ duration: 0.3 }}
+            className="mt-4 border-t border-zinc-100 dark:border-zinc-800 pt-4"
           >
-            <div className="space-y-3">
+            <div className="space-y-4">
               {post.comments === 0 ? (
-                <div className="text-center py-4">
-                  <p className="text-zinc-400 text-sm">No comments yet. Be the first to share your thoughts!</p>
+                <div className="text-center py-6">
+                  <MessageCircle size={32} className="text-zinc-300 mx-auto mb-2" />
+                  <p className="text-zinc-400 text-base font-medium">No comments yet</p>
+                  <p className="text-zinc-400 text-xs">Be the first to share your thoughts!</p>
                 </div>
               ) : (
                 <div className="flex space-x-3">
-                  <div className="h-8 w-8 rounded-full bg-zinc-700 flex items-center justify-center">
-                    <span className="text-sm font-bold text-white">U</span>
+                  <div className="h-8 w-8 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center">
+                    <span className="text-xs font-bold text-zinc-700 dark:text-white">U</span>
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm text-zinc-300">Great question! I think option A is better because...</p>
-                    <p className="text-xs text-zinc-500 mt-1">2 hours ago</p>
+                    <p className="text-zinc-700 dark:text-zinc-200 leading-relaxed text-sm">
+                      Great question! I think option A is better because...
+                    </p>
+                    <p className="text-xs text-zinc-400 mt-1">2 hours ago</p>
                   </div>
                 </div>
               )}
-              
-              {/* Comment Input */}
               <div className="flex space-x-3 mt-4">
                 <div className="h-8 w-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
-                  <span className="text-sm font-bold text-black">Y</span>
+                  <span className="text-xs font-bold text-black">{user?.email?.charAt(0)?.toUpperCase() || "Y"}</span>
                 </div>
                 <div className="flex-1">
                   <input
                     type="text"
-                    placeholder="Add a comment..."
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder-zinc-400 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+                    placeholder={user ? "Add a comment..." : "Login to comment"}
+                    className="w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-full px-4 py-2 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white dark:focus:bg-zinc-900 transition-all duration-200 text-sm"
+                    disabled={!user}
                   />
                 </div>
               </div>
@@ -455,6 +363,6 @@ export default function TimelinePost({ post, index }: TimelinePostProps) {
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
-  );
+    </motion.article>
+  )
 }
