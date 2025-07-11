@@ -24,20 +24,36 @@ model User {
   email_verification_token String?
   created_at               DateTime  @default(now())
 
-
   Post Post[]
 }
 
 model Post {
-  id          Int      @id @default(autoincrement())
-  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  id          Int        @id @default(autoincrement())
+  user        User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
   user_id     Int
   title       String
   description String
   category    String
   image       String?
-  created_at  DateTime @default(now())
+  created_at  DateTime   @default(now())
   expire_at   DateTime
+  Option      Option[]
+  Comments    Comments[]
 }
 
+model Option {
+  id         Int      @id @default(autoincrement())
+  post       Post     @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  post_id    Int
+  option    String
+  count      Int      @default(0)
+  created_at DateTime @default(now())
+}
 
+model Comments {
+  id         Int      @id @default(autoincrement())
+  post       Post     @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  post_id    Int
+  comment    String
+  created_at DateTime @default(now())
+}

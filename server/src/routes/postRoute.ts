@@ -102,6 +102,23 @@ router.get("/all", async (req: Request, res: Response) => {
     const posts = await prisma.post.findMany({
       orderBy:{
         created_at:"desc"
+      },
+      include:{
+        Option:{
+          select:{
+            option:true,
+            count:true,
+            id:true
+          }
+        },
+        Comments:{
+          select:{
+            comment:true,
+            id:true,
+            created_at:true
+          }
+        },
+        user:true
       }
     });
 
@@ -118,7 +135,6 @@ router.get("/all", async (req: Request, res: Response) => {
     });
   }
 });
-
 
 router.get("/:id", authMiddleware, async (req: Request, res: Response) => {
     try {
@@ -141,7 +157,55 @@ router.get("/:id", authMiddleware, async (req: Request, res: Response) => {
     }
 })
 
+//options route
 
+router.post("/add-options", authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { post_id, option1, option2 } = req.body;
+
+    // Validation
+    if (!post_id || !option1 || !option2) {
+      return res.status(422).json({
+        message: "post_id, option1, and option2 are required",
+      });
+    }
+
+    // Check if post exists
+    const post = await prisma.post.findUnique({
+      where: { id: Number(post_id) },
+    });
+
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    // Insert both options
+    await prisma.option.createMany({
+      data: [
+        { option: option1, post_id: Number(post_id) },
+        { option: option2, post_id: Number(post_id) },
+      ],
+    });
+
+    return res.status(201).json({
+      message: "Options added successfully",
+    });
+
+  } catch (error) {
+    console.error("Error adding options:", error);
+    return res.status(500).json({
+      message: "Internal server error while adding options",
+    });
+  }
+});
+
+router.get("/get-posts-option",authMiddleware,async (req:Request,res:Response)=>{
+  try {
+    
+  } catch (error) {
+    
+  }
+})
 
 
 

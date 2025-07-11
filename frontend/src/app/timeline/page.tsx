@@ -1,14 +1,16 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import { Calendar, Clock, Tag, User, RefreshCw, AlertCircle, Loader2 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+
+import { TrendingUp, Filter, Search, Plus, RefreshCw, AlertCircle, Loader2, Sparkles, Siren as Fire, Clock, Users } from "lucide-react";
+import Link from "next/link";
 import { NavbarClient } from "@/components/base/navbar";
+import TimelinePost from "@/components/base/TimeLinePost";
 
-
-// Types
-interface Post {
+// Types based on your API response
+interface ApiPost {
+  id: number;
   user_id: number;
   title: string;
   description: string;
@@ -16,11 +18,66 @@ interface Post {
   image: string;
   created_at: string;
   expire_at: string;
+  Option: Array<{
+    id: number;
+    option: string;
+    count: number;
+  }>;
+  Comments: any[];
 }
 
-// Custom hook for posts
+interface TimelinePostData {
+  id: string;
+  user: {
+    name: string;
+    username: string;
+    avatar?: string;
+    verified?: boolean;
+  };
+  title: string;
+  description?: string;
+  optionA: {
+    id: string;
+    title: string;
+    description: string;
+    votes: number;
+  };
+  optionB: {
+    id: string;
+    title: string;
+    description: string;
+    votes: number;
+  };
+  totalVotes: number;
+  comments: number;
+  likes: number;
+  timeAgo: string;
+  category: string;
+  expiresAt: string;
+  isHot?: boolean;
+  isTrending?: boolean;
+}
+
+const categories = [
+  { name: "All", icon: "🌟", color: "emerald" },
+  { name: "Tech", icon: "💻", color: "blue" },
+  { name: "Health", icon: "🏥", color: "green" },
+  { name: "Finance", icon: "💰", color: "yellow" },
+  { name: "Lifestyle", icon: "🎨", color: "purple" },
+  { name: "Career", icon: "💼", color: "orange" },
+  { name: "Travel", icon: "✈️", color: "pink" }
+];
+
+const sortOptions = [
+  { value: "recent", label: "Latest", icon: Clock },
+  { value: "popular", label: "Popular", icon: Fire },
+  { value: "votes", label: "Most Voted", icon: Users },
+  { value: "trending", label: "Trending", icon: TrendingUp }
+];
+
+// Custom hook for fetching posts
 function usePosts() {
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<TimelinePostData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,19 +92,56 @@ function usePosts() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      const data = await response.json();
-      console.log(data)
+      const result = await response.json();
+      const apiPosts: ApiPost[] = result.data || [];
       
-      // Handle different possible response structures
-      if (Array.isArray(data)) {
-        setPosts(data);
-      } else if (data.posts && Array.isArray(data.posts)) {
-        setPosts(data.posts);
-      } else if (data.data && Array.isArray(data.data)) {
-        setPosts(data.data);
-      } else {
-        throw new Error('Invalid response format');
-      }
+      // Transform API data to match our component structure
+      const transformedPosts: TimelinePostData[] = apiPosts.map((post) => {
+        const createdDate = new Date(post.created_at);
+        const expireDate = new Date(post.expire_at);
+        const timeAgo = formatTimeAgo(createdDate);
+        const expiresIn = formatTimeAgo(expireDate, false);
+        
+        // Handle options - ensure we have exactly 2 options
+        const options = post.Option || [];
+        const optionA = options[0] || { id: 1, option: "Option A", count: 0 };
+        const optionB = options[1] || { id: 2, option: "Option B", count: 0 };
+        
+        const totalVotes = optionA.count + optionB.count;
+        
+        return {
+          id: post.id.toString(),
+          user: {
+            name: `User ${post.user_id}`,
+            username: `user${post.user_id}`,
+            verified: Math.random() > 0.7, // Random verification for demo
+          },
+          title: post.title,
+          description: post.description,
+          optionA: {
+            id: optionA.id.toString(),
+            title: optionA.option,
+            description: optionA.option,
+            votes: optionA.count,
+          },
+          optionB: {
+            id: optionB.id.toString(),
+            title: optionB.option,
+            description: optionB.option,
+            votes: optionB.count,
+          },
+          totalVotes,
+          comments: post.Comments?.length || Math.floor(Math.random() * 50),
+          likes: Math.floor(Math.random() * 200),
+          timeAgo,
+          category: capitalizeFirst(post.category),
+          expiresAt: expiresIn,
+          isHot: totalVotes > 50,
+          isTrending: Math.random() > 0.8,
+        };
+      });
+      
+      setPosts(transformedPosts);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch posts');
       setPosts([]);
@@ -63,118 +157,45 @@ function usePosts() {
   return { posts, loading, error, refetch: fetchPosts };
 }
 
-// Post Card Component
-function PostCard({ post, index }: { post: Post; index: number }) {
-  const createdDate = new Date(post.created_at);
-  const expireDate = new Date(post.expire_at);
-  const timeAgo = formatDistanceToNow(createdDate, { addSuffix: true });
-  const expiresIn = formatDistanceToNow(expireDate, { addSuffix: false });
-
-  const getCategoryColor = (category: string) => {
-    const colors = {
-      tech: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-      lifestyle: "bg-purple-500/10 text-purple-400 border-purple-500/20",
-      business: "bg-green-500/10 text-green-400 border-green-500/20",
-      entertainment: "bg-pink-500/10 text-pink-400 border-pink-500/20",
-      sports: "bg-orange-500/10 text-orange-400 border-orange-500/20",
-      default: "bg-gray-500/10 text-gray-400 border-gray-500/20"
-    };
-    return colors[category.toLowerCase() as keyof typeof colors] || colors.default;
-  };
-
-  return (
-    <motion.article
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="group relative overflow-hidden rounded-2xl bg-zinc-900/50 border border-zinc-800/50 backdrop-blur-sm hover:border-emerald-500/30 transition-all duration-300"
-    >
-      {/* Image Container */}
-      <div className="relative aspect-video overflow-hidden">
-        <motion.img
-          whileHover={{ scale: 1.05 }}
-          transition={{ duration: 0.3 }}
-          src={post.image.startsWith('http') ? post.image : `http://localhost:8000/uploads/${post.image}`}
-          alt={post.title}
-          className="h-full w-full object-cover"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.src = `https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&h=400&fit=crop&crop=entropy&auto=format&q=80`;
-          }}
-        />
-        
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/80 via-transparent to-transparent" />
-        
-        {/* Category Badge */}
-        <div className="absolute top-4 left-4">
-          <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${getCategoryColor(post.category)}`}>
-            <Tag size={12} />
-            {post.category}
-          </span>
-        </div>
-
-        {/* Expiry Indicator */}
-        <div className="absolute top-4 right-4">
-          <div className="flex items-center gap-1.5 rounded-full bg-zinc-900/80 px-3 py-1 text-xs text-zinc-300 backdrop-blur-sm">
-            <Clock size={12} />
-            Expires in {expiresIn}
-          </div>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="p-6">
-        <div className="mb-4">
-          <motion.h2
-            whileHover={{ color: "#10b981" }}
-            className="text-xl font-bold text-white line-clamp-2 cursor-pointer transition-colors duration-200"
-          >
-            {post.title}
-          </motion.h2>
-          <p className="mt-2 text-zinc-400 line-clamp-3 leading-relaxed">
-            {post.description}
-          </p>
-        </div>
-
-        {/* Meta Information */}
-        <div className="flex items-center justify-between text-sm text-zinc-500">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5">
-              <User size={14} />
-              <span>User {post.user_id}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Calendar size={14} />
-              <span>{timeAgo}</span>
-            </div>
-          </div>
-          
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="rounded-lg bg-emerald-600/20 px-4 py-2 text-emerald-400 transition-all duration-200 hover:bg-emerald-600/30"
-          >
-            View Details
-          </motion.button>
-        </div>
-      </div>
-
-      {/* Hover Effect */}
-      <motion.div
-        className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-      />
-    </motion.article>
-  );
+// Helper functions
+function formatTimeAgo(date: Date, addSuffix: boolean = true): string {
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  
+  if (diffInSeconds < 60) return addSuffix ? 'just now' : 'now';
+  if (diffInSeconds < 3600) {
+    const minutes = Math.floor(diffInSeconds / 60);
+    return addSuffix ? `${minutes}m` : `${minutes}m`;
+  }
+  if (diffInSeconds < 86400) {
+    const hours = Math.floor(diffInSeconds / 3600);
+    return addSuffix ? `${hours}h` : `${hours}h`;
+  }
+  const days = Math.floor(diffInSeconds / 86400);
+  return addSuffix ? `${days}d` : `${days}d`;
 }
 
-// Main Page Component
-export default function Home() {
+function capitalizeFirst(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
+export default function Timeline() {
   const { posts, loading, error, refetch } = usePosts();
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [sortBy, setSortBy] = useState("recent");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+
+  const filteredPosts = posts.filter(post => {
+    const matchesCategory = selectedCategory === "All" || post.category === selectedCategory;
+    const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         post.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-950">
+      <div className="min-h-screen bg-black">
         <NavbarClient/>
         <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
           <motion.div
@@ -185,12 +206,12 @@ export default function Home() {
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              className="mx-auto mb-4 h-12 w-12 text-emerald-400"
+              className="mx-auto mb-6 h-16 w-16"
             >
-              <Loader2 size={48} />
+              <div className="h-16 w-16 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 animate-spin" />
             </motion.div>
-            <h2 className="text-xl font-semibold text-white mb-2">Loading Posts</h2>
-            <p className="text-zinc-400">Fetching the latest content for you...</p>
+            <h2 className="text-2xl font-bold text-white mb-3">Loading Timeline</h2>
+            <p className="text-zinc-400">Fetching the latest dilemmas...</p>
           </motion.div>
         </div>
       </div>
@@ -199,7 +220,7 @@ export default function Home() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-zinc-950">
+      <div className="min-h-screen bg-black">
         <NavbarClient />
         <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
           <motion.div
@@ -207,18 +228,18 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center max-w-md mx-auto p-8"
           >
-            <div className="mx-auto mb-4 h-16 w-16 text-red-400">
-              <AlertCircle size={64} />
+            <div className="mx-auto mb-6 h-20 w-20 rounded-full bg-red-500/10 flex items-center justify-center">
+              <AlertCircle size={40} className="text-red-400" />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2">Oops! Something went wrong</h2>
-            <p className="text-zinc-400 mb-6">{error}</p>
+            <h2 className="text-2xl font-bold text-white mb-3">Something went wrong</h2>
+            <p className="text-zinc-400 mb-8">{error}</p>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={refetch}
-              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-6 py-3 text-white font-medium transition-all duration-200 hover:bg-emerald-500"
+              className="inline-flex items-center gap-2 rounded-full bg-emerald-500 text-black px-8 py-3 font-semibold transition-all duration-200 hover:bg-emerald-400"
             >
-              <RefreshCw size={16} />
+              <RefreshCw size={18} />
               Try Again
             </motion.button>
           </motion.div>
@@ -227,83 +248,192 @@ export default function Home() {
     );
   }
 
-  if (posts.length === 0) {
-    return (
-      <div className="min-h-screen bg-zinc-950">
-        <NavbarClient />
-        <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center max-w-md mx-auto p-8"
-          >
-            <div className="mx-auto mb-4 h-16 w-16 text-zinc-400">
-              <AlertCircle size={64} />
-            </div>
-            <h2 className="text-2xl font-bold text-white mb-2">No Posts Found</h2>
-            <p className="text-zinc-400 mb-6">There are no posts available at the moment.</p>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={refetch}
-              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-6 py-3 text-white font-medium transition-all duration-200 hover:bg-emerald-500"
-            >
-              <RefreshCw size={16} />
-              Refresh
-            </motion.button>
-          </motion.div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-zinc-950">
+    <div className="min-h-screen bg-black">
       <NavbarClient />
       
-      {/* Header */}
-      <div className="border-b border-zinc-800/50 bg-zinc-900/50 backdrop-blur-sm">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <motion.h1
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="text-3xl font-bold bg-gradient-to-r from-emerald-400 via-emerald-300 to-emerald-500 bg-clip-text text-transparent"
-              >
-                Latest Posts
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 }}
-                className="mt-2 text-zinc-400"
-              >
-                Discover {posts.length} amazing posts from our community
-              </motion.p>
+      {/* Main Container */}
+      <div className="max-w-2xl mx-auto">
+        {/* Header Section */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="sticky top-16 z-40 bg-black/80 backdrop-blur-xl border-b border-zinc-800/50"
+        >
+          <div className="px-4 py-4">
+            {/* Title */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-white">Timeline</h1>
+                <motion.div
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="text-emerald-400"
+                >
+                  <Sparkles size={24} />
+                </motion.div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`p-2 rounded-full transition-all duration-200 ${
+                    showFilters 
+                      ? 'bg-emerald-500 text-black' 
+                      : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                  }`}
+                >
+                  <Filter size={18} />
+                </motion.button>
+                
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={refetch}
+                  className="p-2 rounded-full bg-zinc-800 text-zinc-400 hover:bg-zinc-700 transition-all duration-200"
+                >
+                  <RefreshCw size={18} />
+                </motion.button>
+              </div>
             </div>
-            
+
+            {/* Search Bar */}
+            <div className="relative mb-4">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-zinc-400" size={20} />
+              <input
+                type="text"
+                placeholder="Search dilemmas..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-2xl text-white placeholder-zinc-400 focus:outline-none focus:border-emerald-500 focus:bg-zinc-900/80 transition-all duration-200"
+              />
+            </div>
+
+            {/* Filters */}
+            <AnimatePresence>
+              {showFilters && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-4 overflow-hidden"
+                >
+                  {/* Categories */}
+                  <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                    {categories.map((category) => (
+                      <motion.button
+                        key={category.name}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setSelectedCategory(category.name)}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+                          selectedCategory === category.name
+                            ? "bg-emerald-500 text-black"
+                            : "bg-zinc-800/50 text-zinc-300 hover:bg-zinc-700/50"
+                        }`}
+                      >
+                        <span>{category.icon}</span>
+                        {category.name}
+                      </motion.button>
+                    ))}
+                  </div>
+
+                  {/* Sort Options */}
+                  <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                    {sortOptions.map((option) => {
+                      const IconComponent = option.icon;
+                      return (
+                        <motion.button
+                          key={option.value}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => setSortBy(option.value)}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+                            sortBy === option.value
+                              ? "bg-emerald-500 text-black"
+                              : "bg-zinc-800/50 text-zinc-300 hover:bg-zinc-700/50"
+                          }`}
+                        >
+                          <IconComponent size={16} />
+                          {option.label}
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.div>
+
+        {/* Posts Feed */}
+        <div className="px-4 py-6">
+          {filteredPosts.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-16"
+            >
+              <div className="mx-auto mb-6 h-20 w-20 rounded-full bg-zinc-800/50 flex items-center justify-center">
+                <AlertCircle size={40} className="text-zinc-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-3">No dilemmas found</h3>
+              <p className="text-zinc-400 mb-8">
+                {searchQuery || selectedCategory !== "All" 
+                  ? "Try adjusting your search or filters."
+                  : "Be the first to share a dilemma!"
+                }
+              </p>
+              <Link href="/create">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="inline-flex items-center gap-2 bg-emerald-500 text-black px-8 py-3 rounded-full font-semibold hover:bg-emerald-400 transition-colors"
+                >
+                  <Plus size={18} />
+                  Create Dilemma
+                </motion.button>
+              </Link>
+            </motion.div>
+          ) : (
+            <div className="space-y-6">
+              {filteredPosts.map((post, index) => (
+                <TimelinePost key={post.id} post={post} index={index} />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Load More */}
+        {filteredPosts.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-8"
+          >
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={refetch}
-              className="inline-flex items-center gap-2 rounded-lg bg-zinc-800/50 px-4 py-2 text-zinc-300 transition-all duration-200 hover:bg-zinc-700/50 hover:text-emerald-400"
+              className="bg-zinc-800/50 text-zinc-300 px-8 py-3 rounded-full font-medium hover:bg-zinc-700/50 transition-colors"
             >
-              <RefreshCw size={16} />
-              Refresh
+              Load More
             </motion.button>
-          </div>
-        </div>
+          </motion.div>
+        )}
       </div>
 
-      {/* Posts Grid */}
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {posts.map((post, index) => (
-            <PostCard key={`${post.user_id}-${post.created_at}`} post={post} index={index} />
-          ))}
-        </div>
-      </div>
+      {/* Floating Create Button */}
+      <Link href="/create">
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          className="fixed bottom-6 right-6 h-14 w-14 bg-emerald-500 text-black rounded-full shadow-2xl flex items-center justify-center z-50 hover:bg-emerald-400 transition-colors"
+        >
+          <Plus size={24} />
+        </motion.button>
+      </Link>
     </div>
   );
 }

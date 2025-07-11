@@ -5,13 +5,30 @@ import { fileURLToPath } from 'url';
 import cors from 'cors';
 import { applimiter } from './config/rateLimit.js';
 import fileUpload from 'express-fileupload'
-
+import { Server } from 'socket.io';
+import { createServer, Server as HttpServer } from 'http';
+import { setupSocket } from './socket.js';
 
 const _dirname = path.dirname(fileURLToPath(import.meta.url));
 
 
 
 const app: Application = express();
+const server:HttpServer = createServer(app)
+
+const io = new Server(server,{
+  cors:{
+    origin:'http://localhost:3000'
+  }
+})
+
+export {io}
+setupSocket(io)
+
+
+
+
+
 const PORT = process.env.PORT || 8000;
 
 app.use(
@@ -56,7 +73,7 @@ app.get("/", async (req: Request, res: Response) => {
 
 import './jobs/index.js'; // Import jobs to ensure they are registered
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     console.log(`http://localhost:${PORT}`);
 });
