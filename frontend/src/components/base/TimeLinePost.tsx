@@ -16,6 +16,7 @@ import {
   Bookmark,
   Flag,
   Eye,
+  Send,
 } from "lucide-react"
 import CountUp from "react-countup"
 import socket, { socketManager } from "@/lib/socket"
@@ -39,14 +40,26 @@ interface TimelinePostProps {
     }>
     totalVotes: number
     comments: number
+    commentsList: Comment[]
     likes: number
     timeAgo: string
     category?: string
-    expiresAt?: string
+    expiresAt: string
     isHot?: boolean
     isTrending?: boolean
   }
   index: number
+}
+
+interface Comment {
+  id: number
+  content: string
+  created_at: string
+  user?: {
+    id: number
+    name: string
+    email: string
+  }
 }
 
 export default function EnhancedTimelinePost({ post, index }: TimelinePostProps) {
@@ -58,8 +71,14 @@ export default function EnhancedTimelinePost({ post, index }: TimelinePostProps)
   const [hasVoted, setHasVoted] = useState(false)
   const [showActions, setShowActions] = useState(false)
 
+  // Comment states
+  const [comments, setComments] = useState<Comment[]>(post.commentsList || [])
+  const [newComment, setNewComment] = useState("")
+  const [isCommenting, setIsCommenting] = useState(false)
+  const [commentTimeout, setCommentTimeout] = useState<NodeJS.Timeout | null>(null)
+
   const { data: session } = useSession()
-  const user = session?.user as { token?: string; id?: string; email?: string } | undefined
+  const user = session?.user as { token?: string; id?: string; email?: string; name?: string } | undefined
 
   const [optionVotes, setOptionVotes] = useState(post.options.map(opt => opt.votes));
   const [totalVotes, setTotalVotes] = useState(post.totalVotes);
@@ -72,8 +91,11 @@ export default function EnhancedTimelinePost({ post, index }: TimelinePostProps)
       setUserVote(storedVote);
       setHasVoted(true);
     }
+    
     const handleConnect = () => setIsConnected(true);
     const handleDisconnect = () => setIsConnected(false);
+    
+    // Vote event handlers
     const handleVoteUpdate = (data: any) => {
       console.log("Vote update received:", data);
       if (data.post_id === Number.parseInt(post.id)) {
@@ -131,26 +153,93 @@ export default function EnhancedTimelinePost({ post, index }: TimelinePostProps)
       }
     }
 
+    // Comment event handlers
+    const handleCommentUpdate = (data: any) => {
+      console.log("Comment update received:", data);
+      if (data.post_id === Number.parseInt(post.id)) {
+        console.log("Processing comment update for this post");
+        // Ensure comments have proper user data structure
+        const processedComments = (data.comments || []).map((comment: any) => ({
+          id: comment.id,
+          content: comment.content,
+          created_at: comment.created_at,
+          user: comment.user ? {
+            id: comment.user.id,
+            name: comment.user.name,
+            email: comment.user.email
+          } : null
+        }));
+        setComments(processedComments);
+        setIsCommenting(false);
+        if (commentTimeout) {
+          clearTimeout(commentTimeout);
+          setCommentTimeout(null);
+        }
+      }
+    };
+
+    const handleCommentSuccess = (data: any) => {
+      console.log("Comment success received:", data);
+      if (data.post_id === Number.parseInt(post.id) && data.user_id === (user?.id || user?.email)) {
+        console.log("Processing comment success for this user");
+        setIsCommenting(false);
+        setNewComment("");
+        if (commentTimeout) {
+          clearTimeout(commentTimeout);
+          setCommentTimeout(null);
+        }
+      }
+    };
+
+    const handleCommentError = (error: any) => {
+      console.error("Comment error received:", error);
+      setIsCommenting(false);
+      setNewComment("");
+      if (commentTimeout) {
+        clearTimeout(commentTimeout);
+        setCommentTimeout(null);
+      }
+    };
+
     socket.on("connect", handleConnect)
     socket.on("disconnect", handleDisconnect)
+    
+    // Vote events
     socket.on(`vote-update-${post.id}`, handleVoteUpdate)
     socket.on("vote-update", handleVoteUpdate)
     socket.on("vote-success", handleVoteSuccess)
     socket.on("vote-error", handleVoteError)
+    
+    // Comment events
+    socket.on(`comment-update-${post.id}`, handleCommentUpdate)
+    socket.on("comment-update", handleCommentUpdate)
+    socket.on("comment-success", handleCommentSuccess)
+    socket.on("comment-error", handleCommentError)
 
     return () => {
       socket.off("connect", handleConnect)
       socket.off("disconnect", handleDisconnect)
+      
+      // Vote events
       socket.off(`vote-update-${post.id}`, handleVoteUpdate)
       socket.off("vote-update", handleVoteUpdate)
       socket.off("vote-success", handleVoteSuccess)
       socket.off("vote-error", handleVoteError)
+      
+      // Comment events
+      socket.off(`comment-update-${post.id}`, handleCommentUpdate)
+      socket.off("comment-update", handleCommentUpdate)
+      socket.off("comment-success", handleCommentSuccess)
+      socket.off("comment-error", handleCommentError)
 
       if (voteTimeout) {
         clearTimeout(voteTimeout)
       }
+      if (commentTimeout) {
+        clearTimeout(commentTimeout)
+      }
     }
-  }, [post.id, voteTimeout, user?.id, user?.email])
+  }, [post.id, voteTimeout, commentTimeout, user?.id, user?.email])
 
   if (!post.options || post.options.length < 2) {
     return null;
@@ -205,6 +294,44 @@ export default function EnhancedTimelinePost({ post, index }: TimelinePostProps)
     }
   };
 
+  const handleComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isConnected || isCommenting || !user || !newComment.trim()) {
+      console.log("Comment blocked:", { isConnected, isCommenting, user: !!user, hasComment: !!newComment.trim() });
+      return;
+    }
+    
+    console.log("Starting comment submission");
+    setIsCommenting(true);
+    
+    const commentData = {
+      post_id: Number.parseInt(post.id),
+      content: newComment.trim(),
+      user_id: user.id || user.email || "anonymous",
+      user_token: user.token,
+      timestamp: new Date().toISOString(),
+    };
+    
+    console.log("Sending comment data:", commentData);
+    
+    try {
+      socket.emit("comment", commentData);
+      console.log("Comment emitted to socket");
+      
+      const timeout = setTimeout(() => {
+        console.log("Comment timeout - resetting state");
+        setIsCommenting(false);
+        setNewComment("");
+        setCommentTimeout(null);
+      }, 5000);
+      setCommentTimeout(timeout);
+    } catch (error) {
+      console.error("Error emitting comment:", error);
+      setIsCommenting(false);
+      setNewComment("");
+    }
+  };
+
   const getCategoryColor = (category: string) => {
     const colors = {
       tech: "bg-blue-500/10 text-blue-400 border-blue-500/20",
@@ -226,118 +353,141 @@ export default function EnhancedTimelinePost({ post, index }: TimelinePostProps)
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.05 }}
-      className="relative bg-gradient-to-br from-zinc-900/90 via-zinc-950/80 to-zinc-900/90 border border-zinc-800 rounded-3xl p-8 mb-8 shadow-xl shadow-emerald-500/10 flex flex-col gap-6 transition-all duration-300 hover:shadow-emerald-400/20"
+      className="relative bg-black border-b border-zinc-800 hover:bg-zinc-900/50 transition-colors duration-200 cursor-pointer"
     >
-      {/* Header: Avatar, Name, Username, Verified, Time, Category */}
-      <div className="flex items-start gap-3 pb-4 border-b border-zinc-800/60 mb-4">
-        <div className="flex-shrink-0 h-12 w-12 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center text-lg font-bold text-zinc-700 dark:text-white">
-          {post.user.avatar ? (
-            <img src={post.user.avatar} alt={post.user.name} className="h-12 w-12 rounded-full object-cover" />
-          ) : (
-            post.user.name.charAt(0)
-          )}
-        </div>
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-zinc-900 dark:text-white">{post.user.name}</span>
-            {post.user.verified && <CheckCircle size={16} className="text-blue-400" />}
-            <span className="text-zinc-500 text-sm">@{post.user.username}</span>
+      {/* Post Container */}
+      <div className="px-4 py-3">
+        {/* Header: Avatar, Name, Username, Verified, Time, More Options */}
+        <div className="flex items-start gap-3 mb-3">
+          {/* Avatar */}
+          <div className="flex-shrink-0 h-12 w-12 rounded-full bg-zinc-800 flex items-center justify-center text-lg font-bold text-white">
+            {post.user.avatar ? (
+              <img src={post.user.avatar} alt={post.user.name} className="h-12 w-12 rounded-full object-cover" />
+            ) : (
+              post.user.name.charAt(0)
+            )}
           </div>
-          <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-xs text-zinc-400">{post.timeAgo}</span>
-            {post.category && <span className="text-xs text-emerald-500 font-medium">· {post.category}</span>}
-          </div>
-        </div>
-      </div>
+          
+          {/* User Info and Content */}
+          <div className="flex-1 min-w-0">
+            {/* User Header */}
+            <div className="flex items-center gap-2 mb-1">
+              <span className="font-bold text-white text-base">{post.user.name}</span>
+              {post.user.verified && <CheckCircle size={16} className="text-emerald-400 flex-shrink-0" />}
+              <span className="text-zinc-500 text-sm">@{post.user.username}</span>
+              <span className="text-zinc-500 text-sm">·</span>
+              <span className="text-zinc-500 text-sm">{post.timeAgo}</span>
+              {post.category && (
+                <>
+                  <span className="text-zinc-500 text-sm">·</span>
+                  <span className="text-emerald-500 text-sm font-medium">{post.category}</span>
+                </>
+              )}
+            </div>
 
-      {/* Post Content */}
-      <div>
-        <h2 className="text-xl font-bold text-white mb-2 leading-snug">{post.title}</h2>
-        {post.description && <p className="text-zinc-300 text-base leading-relaxed">{post.description}</p>}
-      </div>
+            {/* Post Content */}
+            <div className="mb-4">
+              <h2 className="text-white text-base leading-6 mb-2 font-normal">{post.title}</h2>
+              {post.description && (
+                <p className="text-zinc-300 text-base leading-6">{post.description}</p>
+              )}
+            </div>
 
-      {/* Voting Options */}
-      <div className="flex flex-col gap-3 mt-2">
-        {post.options.map((opt, idx) => {
-          const isSelected = userVote === opt.id;
-          return (
-            <motion.button
-              key={opt.id}
-              whileHover={{ scale: !hasVoted && isConnected ? 1.02 : 1 }}
-              whileTap={{ scale: !hasVoted && isConnected ? 0.98 : 1 }}
-              onClick={() => !hasVoted && isConnected && handleVote(opt.id)}
-              disabled={!isConnected || hasVoted || isVoting}
-              className={`relative flex items-center w-full px-6 py-4 rounded-2xl border transition-all duration-200 overflow-hidden
-                ${isSelected ? "border-emerald-500 bg-emerald-900/30 text-emerald-300 shadow-lg shadow-emerald-500/10" :
-                  "border-zinc-700 bg-zinc-900/60 text-zinc-200 hover:bg-zinc-800/80"}
-                ${!isConnected || hasVoted ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
-            >
-              {/* Progress Bar */}
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${percentages[idx]}%` }}
-                transition={{ duration: 1.2, ease: "easeOut" }}
-                className={`absolute left-0 top-0 h-full rounded-2xl z-0 ${isSelected ? "bg-emerald-500/20" : "bg-zinc-700/20"}`}
-                style={{ pointerEvents: 'none' }}
-              />
-              <div className="relative z-10 flex-1 flex flex-col items-start">
-                <span className="font-semibold text-lg">{opt.title}</span>
-                <span className="text-xs mt-1 flex items-center gap-2">
-                  {animateVote.trigger && animateVote.optionId === opt.id && userVote === opt.id
-                    ? <CountUp start={0} end={optionVotes[idx]} duration={1.2} />
-                    : optionVotes[idx]}
-                  <span className="text-zinc-400">votes</span>
-                  <span className="ml-2 px-2 py-0.5 rounded-full bg-zinc-800/60 text-emerald-300 font-semibold text-xs">
-                    {percentages[idx]}%
-                  </span>
+            {/* Voting Options */}
+            <div className="space-y-2 mb-4">
+              {post.options.map((opt, idx) => {
+                const isSelected = userVote === opt.id;
+                return (
+                  <motion.button
+                    key={opt.id}
+                    whileHover={{ scale: !hasVoted && isConnected ? 1.01 : 1 }}
+                    whileTap={{ scale: !hasVoted && isConnected ? 0.99 : 1 }}
+                    onClick={() => !hasVoted && isConnected && handleVote(opt.id)}
+                    disabled={!isConnected || hasVoted || isVoting}
+                    className={`relative w-full text-left p-3 rounded-xl border transition-all duration-200 overflow-hidden
+                      ${isSelected 
+                        ? "border-emerald-500 bg-emerald-500/10 text-emerald-300" 
+                        : "border-zinc-700 bg-zinc-800/50 text-zinc-200 hover:bg-zinc-700/50"
+                      }
+                      ${!isConnected || hasVoted ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
+                  >
+                    {/* Progress Bar */}
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${percentages[idx]}%` }}
+                      transition={{ duration: 1.2, ease: "easeOut" }}
+                      className={`absolute left-0 top-0 h-full rounded-xl z-0 ${
+                        isSelected ? "bg-emerald-500/20" : "bg-zinc-600/30"
+                      }`}
+                      style={{ pointerEvents: 'none' }}
+                    />
+                    
+                    <div className="relative z-10 flex items-center justify-between">
+                      <div className="flex-1">
+                        <span className="font-medium text-sm block">{opt.title}</span>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-zinc-400">
+                            {animateVote.trigger && animateVote.optionId === opt.id && userVote === opt.id
+                              ? <CountUp start={0} end={optionVotes[idx]} duration={1.2} />
+                              : optionVotes[idx]
+                            } votes
+                          </span>
+                          <span className="text-xs text-emerald-400 font-medium">
+                            {percentages[idx]}%
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        {isSelected && !isVoting && <CheckCircle size={16} className="text-emerald-400" />}
+                        {isVoting && userVote === opt.id && <Loader2 size={16} className="animate-spin text-emerald-400" />}
+                      </div>
+                    </div>
+                  </motion.button>
+                );
+              })}
+            </div>
+
+            {/* Actions Bar */}
+            <div className="flex items-center justify-between text-zinc-500">
+              <div className="flex items-center gap-8">
+                <button
+                  onClick={() => setShowComments(!showComments)}
+                  className="flex items-center gap-2 text-sm hover:text-emerald-500 transition-colors group"
+                >
+                  <MessageCircle size={18} className="group-hover:scale-110 transition-transform" />
+                  <span>{comments.length || post.comments}</span>
+                </button>
+                
+                <button className="flex items-center gap-2 text-sm hover:text-emerald-500 transition-colors group">
+                  <Share2 size={18} className="group-hover:scale-110 transition-transform" />
+                  <span>Share</span>
+                </button>
+              </div>
+              
+              {/* Vote Status */}
+              <div className="flex items-center gap-2 text-xs">
+                <span className="text-zinc-400">
+                  {totalVotes} votes
                 </span>
+                {hasVoted && (
+                  <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs">
+                    <CheckCircle size={12} />
+                    Voted
+                  </span>
+                )}
               </div>
-              <div className="ml-4 flex items-center gap-2">
-                {isSelected && !isVoting && <CheckCircle size={20} className="text-emerald-400" />}
-                {isVoting && userVote === opt.id && <Loader2 size={20} className="animate-spin text-emerald-400" />}
-              </div>
-            </motion.button>
-          );
-        })}
-      </div>
-      {/* Optionally, add confetti animation here when a vote is cast */}
-
-      {/* Actions: Comment, Share */}
-      <div className="flex items-center gap-8 mt-2 text-zinc-500">
-        <button
-          onClick={() => setShowComments(!showComments)}
-          className="flex items-center gap-1 text-sm hover:text-emerald-500 transition-colors"
-        >
-          <MessageCircle size={18} />
-          <span>{post.comments}</span>
-        </button>
-        <button
-          className="flex items-center gap-1 text-sm hover:text-blue-500 transition-colors"
-        >
-          <Share2 size={18} />
-          <span>Share</span>
-        </button>
+            </div>
+          </div>
+          
+          {/* More Options Button */}
+          <button className="flex-shrink-0 p-1 rounded-full hover:bg-zinc-800 transition-colors">
+            <MoreHorizontal size={16} className="text-zinc-500" />
+          </button>
+        </div>
       </div>
 
-      {/* Vote/Engagement Info */}
-      <div className="flex items-center gap-4 text-xs text-zinc-400 mt-4">
-        <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-zinc-800/60 border border-zinc-700 font-semibold">
-          <Eye size={14} />
-          {totalVotes} total votes
-        </span>
-        {hasVoted && (
-          <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-900/40 border border-emerald-700 text-emerald-300 font-semibold">
-            <CheckCircle size={14} className="text-emerald-400" />
-            You voted
-          </span>
-        )}
-        <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-zinc-800/60 border border-zinc-700">
-          <TrendingUp size={14} />
-          {totalVotes > 0 ? (100).toFixed(0) : 0}% engagement
-        </span>
-      </div>
-
-      {/* Comments Section (minimal, hidden by default) */}
+      {/* Comments Section */}
       <AnimatePresence>
         {showComments && (
           <motion.div
@@ -345,41 +495,76 @@ export default function EnhancedTimelinePost({ post, index }: TimelinePostProps)
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="mt-4 border-t border-zinc-100 dark:border-zinc-800 pt-4"
+            className="border-t border-zinc-800 bg-zinc-900/30"
           >
-            <div className="space-y-4">
-              {post.comments === 0 ? (
+            <div className="p-4 space-y-4">
+              {/* Comments List */}
+              {comments.length === 0 ? (
                 <div className="text-center py-6">
-                  <MessageCircle size={32} className="text-zinc-300 mx-auto mb-2" />
-                  <p className="text-zinc-400 text-base font-medium">No comments yet</p>
-                  <p className="text-zinc-400 text-xs">Be the first to share your thoughts!</p>
+                  <MessageCircle size={24} className="text-zinc-500 mx-auto mb-2" />
+                  <p className="text-zinc-400 text-sm">No comments yet</p>
+                  <p className="text-zinc-500 text-xs">Be the first to share your thoughts!</p>
                 </div>
               ) : (
-                <div className="flex space-x-3">
-                  <div className="h-8 w-8 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center">
-                    <span className="text-xs font-bold text-zinc-700 dark:text-white">U</span>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-zinc-700 dark:text-zinc-200 leading-relaxed text-sm">
-                      Great question! I think option A is better because...
-                    </p>
-                    <p className="text-xs text-zinc-400 mt-1">2 hours ago</p>
-                  </div>
+                <div className="space-y-3">
+                  {comments.map((comment) => (
+                    <div key={comment.id} className="flex gap-3">
+                      <div className="h-8 w-8 rounded-full bg-zinc-800 flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-bold text-white">
+                          {comment.user?.name?.charAt(0) || "U"}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm font-medium text-white">
+                            {comment.user?.name || "Anonymous"}
+                          </span>
+                          <span className="text-xs text-zinc-500">
+                            {new Date(comment.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <p className="text-zinc-200 text-sm leading-relaxed">
+                          {comment.content}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
-              <div className="flex space-x-3 mt-4">
-                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
-                  <span className="text-xs font-bold text-black">{user?.email?.charAt(0)?.toUpperCase() || "Y"}</span>
+              
+              {/* Comment Input */}
+              <form onSubmit={handleComment} className="flex gap-3 pt-2">
+                <div className="h-8 w-8 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
+                  <span className="text-xs font-bold text-black">
+                    {user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "Y"}
+                  </span>
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 flex gap-2">
                   <input
                     type="text"
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
                     placeholder={user ? "Add a comment..." : "Login to comment"}
-                    className="w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-full px-4 py-2 text-zinc-900 dark:text-white placeholder-zinc-400 focus:outline-none focus:border-emerald-500/50 focus:bg-white dark:focus:bg-zinc-900 transition-all duration-200 text-sm"
-                    disabled={!user}
+                    className="flex-1 bg-transparent border-none outline-none text-zinc-200 placeholder-zinc-500 text-sm"
+                    disabled={!user || isCommenting}
                   />
+                  {user && newComment.trim() && (
+                    <motion.button
+                      type="submit"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      disabled={isCommenting}
+                      className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500 text-black disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isCommenting ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <Send size={14} />
+                      )}
+                    </motion.button>
+                  )}
                 </div>
-              </div>
+              </form>
             </div>
           </motion.div>
         )}

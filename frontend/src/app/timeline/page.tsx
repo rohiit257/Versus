@@ -27,7 +27,21 @@ interface ApiPost {
     option: string
     count: number
   }>
-  Comments: any[]
+  Comments: Array<{
+    id: number
+    comment: string
+    created_at: string
+    user?: {
+      id: number
+      name: string
+      email: string
+    }
+  }>
+  user: {
+    id: number
+    name: string
+    email: string
+  }
 }
 
 interface TimelinePostData {
@@ -47,6 +61,16 @@ interface TimelinePostData {
   }>
   totalVotes: number
   comments: number
+  commentsList: Array<{
+    id: number
+    content: string
+    created_at: string
+    user?: {
+      id: number
+      name: string
+      email: string
+    }
+  }>
   likes: number
   timeAgo: string
   category: string
@@ -79,8 +103,8 @@ function usePosts(initialData?: any) {
           return {
             id: post.id.toString(),
             user: {
-              name: `User ${post.user_id}`,
-              username: `user${post.user_id}`,
+              name: post.user?.name || `User ${post.user_id}`,
+              username: post.user?.email?.split('@')[0] || `user${post.user_id}`,
               verified: Math.random() > 0.7,
             },
             title: post.title,
@@ -88,6 +112,16 @@ function usePosts(initialData?: any) {
             options,
             totalVotes,
             comments: post.Comments?.length || 0,
+            commentsList: (post.Comments || []).map(c => ({
+              id: c.id,
+              content: c.comment,
+              created_at: c.created_at,
+              user: c.user ? {
+                id: c.user.id,
+                name: c.user.name,
+                email: c.user.email
+              } : undefined
+            })),
             likes: Math.floor(Math.random() * 200),
             timeAgo,
             category: capitalizeFirst(post.category),
@@ -131,8 +165,8 @@ function usePosts(initialData?: any) {
           return {
             id: post.id.toString(),
             user: {
-              name: `User ${post.user_id}`,
-              username: `user${post.user_id}`,
+              name: post.user?.name || `User ${post.user_id}`,
+              username: post.user?.email?.split('@')[0] || `user${post.user_id}`,
               verified: Math.random() > 0.7,
             },
             title: post.title,
@@ -140,6 +174,16 @@ function usePosts(initialData?: any) {
             options,
             totalVotes,
             comments: post.Comments?.length || 0,
+            commentsList: (post.Comments || []).map(c => ({
+              id: c.id,
+              content: c.comment,
+              created_at: c.created_at,
+              user: c.user ? {
+                id: c.user.id,
+                name: c.user.name,
+                email: c.user.email
+              } : undefined
+            })),
             likes: Math.floor(Math.random() * 200),
             timeAgo,
             category: capitalizeFirst(post.category),

@@ -111,10 +111,14 @@ router.get("/all", async (req: Request, res: Response) => {
           }
         },
         Comments:{
-          select:{
-            comment:true,
-            id:true,
-            created_at:true
+          include:{
+            user:{
+              select:{
+                id:true,
+                name:true,
+                email:true
+              }
+            }
           }
         },
         user:true

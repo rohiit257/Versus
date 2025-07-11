@@ -25,6 +25,7 @@ model User {
   created_at               DateTime  @default(now())
 
   Post Post[]
+  Comments Comments[]
 }
 
 model Post {
@@ -54,6 +55,8 @@ model Comments {
   id         Int      @id @default(autoincrement())
   post       Post     @relation(fields: [post_id], references: [id], onDelete: Cascade)
   post_id    Int
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id    Int
   comment    String
   created_at DateTime @default(now())
 }

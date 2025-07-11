@@ -1,5 +1,6 @@
 import { Server } from "socket.io";
 import { votinQueue, votinQueueName } from "./jobs/votingJob.js";
+import { commentQueue, commentQueueName } from "./jobs/commentJob.js";
 import prisma from "./config/database.js";
 
 export function setupSocket(io: Server) {
@@ -61,6 +62,57 @@ export function setupSocket(io: Server) {
                 });
             }
         });
+
+        // Handle comment events
+        socket.on("comment", async (data: any) => {
+            console.log("Comment received:", data);
+            
+            try {
+                // Add comment to queue for processing
+                await commentQueue.add(commentQueueName, data);
+                
+                // Wait a bit for the job to process, then fetch updated comments
+                setTimeout(async () => {
+                    try {
+                        const updatedComments = await getUpdatedComments(data.post_id);
+                        
+                        // Emit updated comments to all clients
+                        const commentUpdateData = {
+                            post_id: data.post_id,
+                            comments: updatedComments,
+                            user_comment: data.content,
+                            user_id: data.user_id,
+                            timestamp: new Date().toISOString()
+                        };
+                        
+                        // Emit to all clients including the sender
+                        io.emit("comment-update", commentUpdateData);
+                        io.emit(`comment-update-${data.post_id}`, commentUpdateData);
+                        
+                        // Emit success to the commenting user
+                        socket.emit("comment-success", {
+                            post_id: data.post_id,
+                            content: data.content,
+                            user_id: data.user_id
+                        });
+                        
+                    } catch (error) {
+                        console.error("Error fetching updated comments:", error);
+                        socket.emit("comment-error", { 
+                            error: "Failed to update comments", 
+                            post_id: data.post_id 
+                        });
+                    }
+                }, 1000); // Wait 1 second for the job to process
+                
+            } catch (error) {
+                console.error("Error processing comment:", error);
+                socket.emit("comment-error", { 
+                    error: "Failed to process comment", 
+                    post_id: data.post_id 
+                });
+            }
+        });
     });
 }
 
@@ -101,6 +153,43 @@ async function getUpdatedVoteCounts(postId: string | number) {
         
     } catch (error) {
         console.error("Error fetching vote counts:", error);
+        throw error;
+    }
+}
+
+// Fetch actual comments from database using Prisma
+async function getUpdatedComments(postId: string | number) {
+    try {
+        console.log("Fetching updated comments for post:", postId);
+        
+        // Get all comments for the post with user information
+        const comments = await prisma.comments.findMany({
+            where: { post_id: Number(postId) },
+            orderBy: { created_at: 'desc' },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true
+                    }
+                }
+            }
+        });
+        
+        return comments.map(comment => ({
+            id: comment.id,
+            content: comment.comment,
+            created_at: comment.created_at,
+            user: comment.user ? {
+                id: comment.user.id,
+                name: comment.user.name,
+                email: comment.user.email
+            } : null
+        }));
+        
+    } catch (error) {
+        console.error("Error fetching comments:", error);
         throw error;
     }
 }
