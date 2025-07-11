@@ -8,6 +8,7 @@ import {
   MessageCircle,
 } from "lucide-react"
 import SidebarClient from "@/components/base/navbar/SidebarClient"
+import RightSidebar from "@/components/base/navbar/RightSidebar"
 import TimelinePost from "@/components/base/TimeLinePost"
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -248,9 +249,10 @@ export default function EnhancedTimeline({ initialData }: EnhancedTimelineProps)
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-950">
+      <div className="min-h-screen bg-black">
         <SidebarClient />
-        <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
+        <RightSidebar />
+        <div className="ml-64 mr-80 flex items-center justify-center min-h-screen">
           <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
             <motion.div className="relative mx-auto mb-8 h-20 w-20">
               <motion.div
@@ -280,9 +282,10 @@ export default function EnhancedTimeline({ initialData }: EnhancedTimelineProps)
 
   if (error) {
     return (
-      <div className="min-h-screen bg-zinc-950">
+      <div className="min-h-screen bg-black">
         <SidebarClient />
-        <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
+        <RightSidebar />
+        <div className="ml-64 mr-80 flex items-center justify-center min-h-screen">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -313,103 +316,85 @@ export default function EnhancedTimeline({ initialData }: EnhancedTimelineProps)
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 flex relative">
+    <div className="min-h-screen bg-black">
+      {/* Left Sidebar */}
       <SidebarClient />
 
-      {/* Fixed Glassy Header with Search */}
-      <header className="fixed left-20 top-0 right-0 z-30 h-16 flex items-center justify-center px-8 border-b border-zinc-800/30 bg-gradient-to-r from-zinc-950/95 via-zinc-900/90 to-zinc-950/95 backdrop-blur-xl shadow-lg">
-        <div className="w-full max-w-md flex items-center bg-zinc-800/40 border border-zinc-700/50 rounded-2xl px-4 py-3 backdrop-blur-sm shadow-xl">
-          <div className="flex items-center gap-3 w-full">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/30">
-              <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
+      {/* Right Sidebar */}
+      <RightSidebar />
+
+      {/* Main Content - Timeline */}
+      <main className="ml-64 mr-80 min-h-screen">
+        {/* Header */}
+        <div className="sticky top-0 z-30 bg-black/80 backdrop-blur-xl border-b border-zinc-800">
+          <div className="flex items-center justify-between px-8 py-6">
+            <div className="flex items-center gap-4">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex items-center gap-3"
+              >
+                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
+                  <Activity size={16} className="text-black" />
+                </div>
+                <h1 className="text-2xl font-bold text-white">Timeline</h1>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20"
+              >
+                <div className="h-2 w-2 bg-emerald-400 rounded-full animate-pulse" />
+                <span className="text-xs font-medium text-emerald-400">Live</span>
+              </motion.div>
             </div>
-            <input
-              type="text"
-              placeholder="Search posts, users, or topics..."
-              className="flex-1 bg-transparent outline-none border-none text-white placeholder-zinc-400 text-sm font-medium"
-            />
-            <div className="flex items-center gap-2">
-              <div className="w-1 h-1 rounded-full bg-zinc-600"></div>
-              <div className="w-1 h-1 rounded-full bg-zinc-600"></div>
-              <div className="w-1 h-1 rounded-full bg-zinc-600"></div>
-            </div>
+
+            {/* Refresh Button */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-800/50 text-zinc-300 hover:bg-emerald-500/15 hover:text-emerald-400 transition-all duration-200 border border-zinc-700/40 hover:border-emerald-500/40"
+            >
+              <RefreshCw size={16} className={isRefreshing ? "animate-spin" : ""} />
+              <span className="text-sm font-medium">Refresh</span>
+            </motion.button>
           </div>
         </div>
-      </header>
 
-      {/* Posts Feed */}
-      <main className="max-w-2xl mx-auto px-6 pt-24 pb-16 flex-1">
-        {posts.length === 0 ? (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-32">
+        {/* Timeline Posts */}
+        <div className="px-8 py-6">
+          {posts.length === 0 ? (
             <motion.div
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 3, repeat: Infinity }}
-              className="mx-auto mb-8 h-32 w-32 rounded-full bg-gradient-to-br from-emerald-500/10 to-blue-500/10 flex items-center justify-center border-4 border-emerald-500/20 shadow-2xl"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-20"
             >
-              <MessageCircle size={64} className="text-emerald-400" />
+              <div className="mx-auto mb-6 h-16 w-16 rounded-full bg-zinc-800/50 flex items-center justify-center">
+                <MessageCircle size={24} className="text-zinc-400" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">No posts yet</h3>
+              <p className="text-zinc-400 mb-6">Be the first to create a post and start the conversation!</p>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-black font-semibold transition-all duration-200 hover:from-emerald-400 hover:to-emerald-500 shadow-lg shadow-emerald-500/25"
+              >
+                <Activity size={16} />
+                Create First Post
+              </motion.button>
             </motion.div>
-            <h3 className="text-3xl font-bold text-emerald-200 mb-4">No posts yet</h3>
-            <p className="text-zinc-400 mb-8 text-lg max-w-md mx-auto">
-              Be the first to start a conversation!
-            </p>
-            <button className="mt-4 px-6 py-3 rounded-full bg-emerald-500 text-black font-bold text-lg shadow-lg hover:bg-emerald-400 transition-all">Create Post</button>
-          </motion.div>
-        ) : (
-          <motion.div layout className="space-y-12">
-            <AnimatePresence>
-              {posts.map((post, index) => {
-                // Determine if current user is owner and post has < 2 options
-                const isOwner = user && (post.user.username === `user${user.id}` || post.user.name === `User ${user.id}`);
-                const needsOptions = post.options.length < 2;
-                const postLink = isOwner && needsOptions ? `/post/${post.id}/manage-options` : undefined;
-                const PostContent = (
-                  <TimelinePost post={post} index={index} />
-                );
-                return (
-                  <motion.div
-                    key={post.id}
-                    layout
-                    initial={{ opacity: 0, y: 40 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -40 }}
-                    transition={{ duration: 0.4, delay: index * 0.07 }}
-                  >
-                    {postLink ? (
-                      <Link href={postLink} className="block hover:opacity-90 transition-opacity">
-                        {PostContent}
-                      </Link>
-                    ) : (
-                      PostContent
-                    )}
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-          </motion.div>
-        )}
-
-        {/* Floating Action Button (FAB) for Create Post */}
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="fixed bottom-8 right-8 z-40 flex items-center gap-3 px-6 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700 text-black font-bold text-lg shadow-2xl hover:shadow-emerald-500/40 transition-all duration-300 border border-emerald-400/20 backdrop-blur-sm"
-          style={{ 
-            boxShadow: '0 8px 32px 0 rgba(16,185,129,0.25), 0 4px 16px 0 rgba(16,185,129,0.15)',
-            background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)'
-          }}
-        >
-          <motion.span 
-            className="text-2xl"
-            animate={{ rotate: [0, 10, -10, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          >
-            +
-          </motion.span>
-          <span>Create Post</span>
-        </motion.button>
+          ) : (
+            <motion.div className="space-y-6">
+              <AnimatePresence>
+                {posts.map((post, idx) => (
+                  <TimelinePost key={post.id} post={post} index={idx} />
+                ))}
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </div>
       </main>
     </div>
   )
