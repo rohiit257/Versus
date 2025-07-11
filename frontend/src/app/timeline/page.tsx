@@ -9,6 +9,8 @@ import {
 } from "lucide-react"
 import SidebarClient from "@/components/base/navbar/SidebarClient"
 import TimelinePost from "@/components/base/TimeLinePost"
+import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 // Types based on your API response
 interface ApiPost {
@@ -53,30 +55,13 @@ interface TimelinePostData {
   isTrending?: boolean
 }
 
-// Custom hook for fetching posts
-function usePosts() {
-  const [posts, setPosts] = useState<TimelinePostData[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  const fetchPosts = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-
-      const response = await fetch("http://localhost:8000/api/post/v1/all")
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const result = await response.json()
-      const apiPosts: ApiPost[] = result.data || []
-
-      // Transform API data to match our component structure
-      const transformedPosts: TimelinePostData[] = apiPosts
+// Custom hook for fetching posts, with support for initialData
+function usePosts(initialData?: any) {
+  const [posts, setPosts] = useState<TimelinePostData[]>(() => {
+    if (initialData && initialData.data) {
+      const apiPosts: ApiPost[] = initialData.data || [];
+      return apiPosts
         .filter((post) => {
-          // Filter out posts without valid options (must have at least 2)
           const options = post.Option || [];
           return options.length >= 2 && options.every(opt => opt.option);
         })
@@ -111,21 +96,72 @@ function usePosts() {
             isTrending: Math.random() > 0.8,
           };
         });
-
-      setPosts(transformedPosts)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch posts")
-      setPosts([])
-    } finally {
-      setLoading(false)
     }
-  }
+    return [];
+  });
+  const [loading, setLoading] = useState(!initialData);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchPosts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch("http://localhost:8000/api/post/v1/all");
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const result = await response.json();
+      const apiPosts: ApiPost[] = result.data || [];
+      const transformedPosts: TimelinePostData[] = apiPosts
+        .filter((post) => {
+          const options = post.Option || [];
+          return options.length >= 2 && options.every(opt => opt.option);
+        })
+        .map((post) => {
+          const createdDate = new Date(post.created_at);
+          const expireDate = new Date(post.expire_at);
+          const timeAgo = formatTimeAgo(createdDate);
+          const expiresIn = formatTimeAgo(expireDate, false);
+          const options = (post.Option || []).map(opt => ({
+            id: opt.id.toString(),
+            title: opt.option,
+            votes: opt.count,
+          }));
+          const totalVotes = options.reduce((sum, opt) => sum + opt.votes, 0);
+          return {
+            id: post.id.toString(),
+            user: {
+              name: `User ${post.user_id}`,
+              username: `user${post.user_id}`,
+              verified: Math.random() > 0.7,
+            },
+            title: post.title,
+            description: post.description,
+            options,
+            totalVotes,
+            comments: post.Comments?.length || 0,
+            likes: Math.floor(Math.random() * 200),
+            timeAgo,
+            category: capitalizeFirst(post.category),
+            expiresAt: expiresIn,
+            isHot: totalVotes > 50,
+            isTrending: Math.random() > 0.8,
+          };
+        });
+      setPosts(transformedPosts);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch posts");
+      setPosts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetchPosts()
-  }, [])
+    if (!initialData) fetchPosts();
+  }, []);
 
-  return { posts, loading, error, refetch: fetchPosts }
+  return { posts, loading, error, refetch: fetchPosts };
 }
 
 // Helper functions
@@ -150,9 +186,15 @@ function capitalizeFirst(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
 }
 
-export default function EnhancedTimeline() {
-  const { posts, loading, error, refetch } = usePosts()
+type EnhancedTimelineProps = {
+  initialData?: any;
+};
+
+export default function EnhancedTimeline({ initialData }: EnhancedTimelineProps) {
+  const { posts, loading, error, refetch } = usePosts(initialData);
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const { data: session } = useSession();
+  const user = session?.user as { id?: string | number } | undefined;
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
@@ -231,14 +273,26 @@ export default function EnhancedTimeline() {
       <SidebarClient />
 
       {/* Fixed Glassy Header with Search */}
-      <header className="fixed left-20 top-0 right-0 z-30 h-16 flex items-center justify-center px-8 border-b border-zinc-800/60 bg-zinc-950/60 backdrop-blur-md shadow-lg">
-        <div className="w-full max-w-md flex items-center bg-zinc-800/80 border border-zinc-700 rounded-full px-4 py-2">
-          <svg className="w-5 h-5 text-zinc-400 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-          <input
-            type="text"
-            placeholder="Search..."
-            className="w-full bg-transparent outline-none border-none text-white placeholder-zinc-400 text-base"
-          />
+      <header className="fixed left-20 top-0 right-0 z-30 h-16 flex items-center justify-center px-8 border-b border-zinc-800/30 bg-gradient-to-r from-zinc-950/95 via-zinc-900/90 to-zinc-950/95 backdrop-blur-xl shadow-lg">
+        <div className="w-full max-w-md flex items-center bg-zinc-800/40 border border-zinc-700/50 rounded-2xl px-4 py-3 backdrop-blur-sm shadow-xl">
+          <div className="flex items-center gap-3 w-full">
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/30">
+              <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              placeholder="Search posts, users, or topics..."
+              className="flex-1 bg-transparent outline-none border-none text-white placeholder-zinc-400 text-sm font-medium"
+            />
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-1 rounded-full bg-zinc-600"></div>
+              <div className="w-1 h-1 rounded-full bg-zinc-600"></div>
+              <div className="w-1 h-1 rounded-full bg-zinc-600"></div>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -262,29 +316,56 @@ export default function EnhancedTimeline() {
         ) : (
           <motion.div layout className="space-y-12">
             <AnimatePresence>
-              {posts.map((post, index) => (
-                <motion.div
-                  key={post.id}
-                  layout
-                  initial={{ opacity: 0, y: 40 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -40 }}
-                  transition={{ duration: 0.4, delay: index * 0.07 }}
-                >
+              {posts.map((post, index) => {
+                // Determine if current user is owner and post has < 2 options
+                const isOwner = user && (post.user.username === `user${user.id}` || post.user.name === `User ${user.id}`);
+                const needsOptions = post.options.length < 2;
+                const postLink = isOwner && needsOptions ? `/post/${post.id}/manage-options` : undefined;
+                const PostContent = (
                   <TimelinePost post={post} index={index} />
-                </motion.div>
-              ))}
+                );
+                return (
+                  <motion.div
+                    key={post.id}
+                    layout
+                    initial={{ opacity: 0, y: 40 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -40 }}
+                    transition={{ duration: 0.4, delay: index * 0.07 }}
+                  >
+                    {postLink ? (
+                      <Link href={postLink} className="block hover:opacity-90 transition-opacity">
+                        {PostContent}
+                      </Link>
+                    ) : (
+                      PostContent
+                    )}
+                  </motion.div>
+                );
+              })}
             </AnimatePresence>
           </motion.div>
         )}
 
         {/* Floating Action Button (FAB) for Create Post */}
-        <button
-          className="fixed bottom-8 right-8 z-40 flex items-center gap-3 px-6 py-4 rounded-full bg-gradient-to-r from-emerald-500 to-blue-500 text-black font-bold text-lg shadow-xl hover:from-emerald-400 hover:to-blue-400 transition-all duration-200"
-          style={{ boxShadow: '0 8px 32px 0 rgba(16,185,129,0.25)' }}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="fixed bottom-8 right-8 z-40 flex items-center gap-3 px-6 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700 text-black font-bold text-lg shadow-2xl hover:shadow-emerald-500/40 transition-all duration-300 border border-emerald-400/20 backdrop-blur-sm"
+          style={{ 
+            boxShadow: '0 8px 32px 0 rgba(16,185,129,0.25), 0 4px 16px 0 rgba(16,185,129,0.15)',
+            background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%)'
+          }}
         >
-          <span className="text-xl">+</span> Create Post
-        </button>
+          <motion.span 
+            className="text-2xl"
+            animate={{ rotate: [0, 10, -10, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          >
+            +
+          </motion.span>
+          <span>Create Post</span>
+        </motion.button>
       </main>
     </div>
   )

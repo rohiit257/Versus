@@ -75,16 +75,20 @@ export default function EnhancedTimelinePost({ post, index }: TimelinePostProps)
     const handleConnect = () => setIsConnected(true);
     const handleDisconnect = () => setIsConnected(false);
     const handleVoteUpdate = (data: any) => {
+      console.log("Vote update received:", data);
       if (data.post_id === Number.parseInt(post.id)) {
+        console.log("Processing vote update for this post");
         if (data.options && Array.isArray(data.options)) {
           const newVotes = post.options.map(opt => {
             const updated = data.options.find((o: any) => o.id === Number(opt.id));
             return updated ? updated.count : opt.votes;
           });
+          console.log("Updated votes:", newVotes);
           setOptionVotes(newVotes);
           setTotalVotes(newVotes.reduce((sum, v) => sum + v, 0));
         }
         if (data.user_vote && data.user_id === (user?.id || user?.email)) {
+          console.log("User vote confirmed:", data.user_vote);
           setUserVote(data.user_vote);
           setHasVoted(true);
           localStorage.setItem(`vote_${post.id}_${user?.id || user?.email}`, data.user_vote);
@@ -98,7 +102,9 @@ export default function EnhancedTimelinePost({ post, index }: TimelinePostProps)
     };
 
     const handleVoteSuccess = (data: any) => {
+      console.log("Vote success received:", data);
       if (data.post_id === Number.parseInt(post.id) && data.user_id === (user?.id || user?.email)) {
+        console.log("Processing vote success for this user");
         setHasVoted(true)
         setIsVoting(false)
 
@@ -114,6 +120,7 @@ export default function EnhancedTimelinePost({ post, index }: TimelinePostProps)
     }
 
     const handleVoteError = (error: any) => {
+      console.error("Vote error received:", error);
       setIsVoting(false)
       setUserVote(null)
       setHasVoted(false)
@@ -150,10 +157,16 @@ export default function EnhancedTimelinePost({ post, index }: TimelinePostProps)
   }
 
   const handleVote = async (optionId: string) => {
-    if (!isConnected || isVoting || hasVoted || !user) return;
+    if (!isConnected || isVoting || hasVoted || !user) {
+      console.log("Vote blocked:", { isConnected, isVoting, hasVoted, user: !!user });
+      return;
+    }
+    
+    console.log("Starting vote for option:", optionId);
     setIsVoting(true);
     setUserVote(optionId);
     setAnimateVote({ optionId, trigger: true });
+    
     // Optimistically increment the vote count for the selected option
     setOptionVotes(prevVotes => {
       const idx = post.options.findIndex(opt => opt.id === optionId);
@@ -163,6 +176,7 @@ export default function EnhancedTimelinePost({ post, index }: TimelinePostProps)
       setTotalVotes(tot => tot + 1);
       return newVotes;
     });
+    
     const voteData = {
       post_id: Number.parseInt(post.id),
       option_id: Number.parseInt(optionId),
@@ -170,15 +184,22 @@ export default function EnhancedTimelinePost({ post, index }: TimelinePostProps)
       user_token: user.token,
       timestamp: new Date().toISOString(),
     };
+    
+    console.log("Sending vote data:", voteData);
+    
     try {
       socket.emit("vote", voteData);
+      console.log("Vote emitted to socket");
+      
       const timeout = setTimeout(() => {
+        console.log("Vote timeout - resetting state");
         setIsVoting(false);
         setUserVote(null);
         setVoteTimeout(null);
       }, 5000);
       setVoteTimeout(timeout);
     } catch (error) {
+      console.error("Error emitting vote:", error);
       setIsVoting(false);
       setUserVote(null);
     }

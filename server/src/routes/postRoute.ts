@@ -35,7 +35,7 @@ router.post("/", authMiddleware, async (req: Request, res: Response) => {
     payload.image = await uploadImage(image);
 
     // 💾 Create post in DB
-    await prisma.post.create({
+    const createdPost = await prisma.post.create({
       data: {
         ...payload,
         user_id: req.user.id,
@@ -45,6 +45,8 @@ router.post("/", authMiddleware, async (req: Request, res: Response) => {
 
     return res.status(200).json({
       message: "Post created successfully",
+      postId: createdPost.id,
+      data: createdPost,
     });
 
   } catch (error) {
@@ -67,7 +69,6 @@ router.post("/", authMiddleware, async (req: Request, res: Response) => {
 
 router.get("/", authMiddleware, async (req: Request, res: Response) => {
     try {
-
         const post = await prisma.post.findMany({
             where: {
                 user_id: req.user.id
@@ -86,9 +87,6 @@ router.get("/", authMiddleware, async (req: Request, res: Response) => {
             message: "Post Successfully Fetched"
         })
 
-
-
-
     } catch (error) {
         return res.json({
             error: error,
@@ -97,6 +95,7 @@ router.get("/", authMiddleware, async (req: Request, res: Response) => {
     }
 })
 
+// Move /all route BEFORE /:id route to avoid conflicts
 router.get("/all", async (req: Request, res: Response) => {
   try {
     const posts = await prisma.post.findMany({
@@ -136,29 +135,39 @@ router.get("/all", async (req: Request, res: Response) => {
   }
 });
 
+// Now the /:id route comes AFTER specific routes
 router.get("/:id", authMiddleware, async (req: Request, res: Response) => {
     try {
-        const { id } = req.params
+        const { id } = req.params;
+        console.log("Fetching post with ID:", id);
+        
         const post = await prisma.post.findUnique({
-            where: {
-                id: Number(id)
+            where: { id: Number(id) },
+            include: {
+                Option: true,
+                user: true
             }
-        })
+        });
+
+        console.log("Found post:", post);
+
+        if (!post) {
+            return res.status(404).json({ message: "Post not found" });
+        }
 
         return res.status(200).json({
             data: post
-        })
+        });
     } catch (error) {
-        console.log(error)
-        return res.json({
-            message: "something went wrong",
-            status: 422
-        })
+        console.log("Error in /:id route:", error);
+        return res.status(500).json({
+            message: "Something went wrong",
+            status: 500
+        });
     }
-})
+});
 
 //options route
-
 router.post("/add-options", authMiddleware, async (req: Request, res: Response) => {
   try {
     const { post_id, option1, option2 } = req.body;
@@ -191,8 +200,8 @@ router.post("/add-options", authMiddleware, async (req: Request, res: Response) 
       message: "Options added successfully",
     });
 
-  } catch (error) {
-    console.error("Error adding options:", error);
+  } catch (error: any) {
+    console.error("Add options error:", error);
     return res.status(500).json({
       message: "Internal server error while adding options",
     });
@@ -206,12 +215,5 @@ router.get("/get-posts-option",authMiddleware,async (req:Request,res:Response)=>
     
   }
 })
-
-
-
-
-
-
-
 
 export default router

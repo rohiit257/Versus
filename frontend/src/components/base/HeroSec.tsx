@@ -6,7 +6,7 @@ import Navbar from "./navbar/NavbarClient";
 
 export function HeroSectionOne() {
   return (
-    <div className="relative mx-auto my-10 flex max-w-7xl flex-col items-center justify-center">
+    <div className="relative mx-auto my-10 flex max-w-7xl flex-col items-center justify-center bg-black">
       <Navbar />
 
       {/* Gradient lines */}

@@ -1,5 +1,6 @@
 import { Server } from "socket.io";
 import { votinQueue, votinQueueName } from "./jobs/votingJob.js";
+import prisma from "./config/database.js";
 
 export function setupSocket(io: Server) {
     io.on("connection", (socket) => {
@@ -17,23 +18,40 @@ export function setupSocket(io: Server) {
                 // Add vote to queue for processing
                 await votinQueue.add(votinQueueName, data);
                 
-                // You should get the updated vote counts from your database
-                // This is a placeholder - replace with your actual vote counting logic
-                const updatedVoteCounts = await getUpdatedVoteCounts(data.post_id);
-                
-                // Emit updated vote counts to all clients
-                const voteUpdateData = {
-                    post_id: data.post_id,
-                    optionA_votes: updatedVoteCounts.optionA,
-                    optionB_votes: updatedVoteCounts.optionB,
-                    total_votes: updatedVoteCounts.total,
-                    user_vote: data.option, // A or B
-                    timestamp: new Date().toISOString()
-                };
-                
-                // Emit to all clients including the sender
-                io.emit("vote-update", voteUpdateData);
-                io.emit(`vote-update-${data.post_id}`, voteUpdateData);
+                // Wait a bit for the job to process, then fetch updated counts
+                setTimeout(async () => {
+                    try {
+                        const updatedVoteCounts = await getUpdatedVoteCounts(data.post_id);
+                        
+                        // Emit updated vote counts to all clients
+                        const voteUpdateData = {
+                            post_id: data.post_id,
+                            options: updatedVoteCounts.options,
+                            total_votes: updatedVoteCounts.total,
+                            user_vote: data.option_id,
+                            user_id: data.user_id,
+                            timestamp: new Date().toISOString()
+                        };
+                        
+                        // Emit to all clients including the sender
+                        io.emit("vote-update", voteUpdateData);
+                        io.emit(`vote-update-${data.post_id}`, voteUpdateData);
+                        
+                        // Emit success to the voting user
+                        socket.emit("vote-success", {
+                            post_id: data.post_id,
+                            option: data.option_id,
+                            user_id: data.user_id
+                        });
+                        
+                    } catch (error) {
+                        console.error("Error fetching updated vote counts:", error);
+                        socket.emit("vote-error", { 
+                            error: "Failed to update vote counts", 
+                            post_id: data.post_id 
+                        });
+                    }
+                }, 1000); // Wait 1 second for the job to process
                 
             } catch (error) {
                 console.error("Error processing vote:", error);
@@ -43,66 +61,42 @@ export function setupSocket(io: Server) {
                 });
             }
         });
-
-        // Handle legacy voting events (for backward compatibility)
-        socket.onAny(async (eventName: string, data: any) => {
-            if (eventName.startsWith("voting-")) {
-                console.log("Legacy voting event:", eventName, data);
-                
-                try {
-                    // Add vote to queue for processing
-                    await votinQueue.add(votinQueueName, data);
-                    
-                    // Get updated vote counts
-                    const updatedVoteCounts = await getUpdatedVoteCounts(data.post_id);
-                    
-                    // Emit updated vote counts
-                    const voteUpdateData = {
-                        post_id: data.post_id,
-                        optionA_votes: updatedVoteCounts.optionA,
-                        optionB_votes: updatedVoteCounts.optionB,
-                        total_votes: updatedVoteCounts.total,
-                        user_vote: data.option,
-                        timestamp: new Date().toISOString()
-                    };
-                    
-                    // Emit to all clients
-                    io.emit("vote-update", voteUpdateData);
-                    io.emit(`vote-update-${data.post_id}`, voteUpdateData);
-                    
-                } catch (error) {
-                    console.error("Error processing legacy vote:", error);
-                    socket.emit("vote-error", { 
-                        error: "Failed to process vote", 
-                        post_id: data.post_id 
-                    });
-                }
-            }
-        });
     });
 }
 
-// This function should fetch the updated vote counts from your database
-// Replace this with your actual database query
+// Fetch actual vote counts from database using Prisma
 async function getUpdatedVoteCounts(postId: string | number) {
-    // Example implementation - replace with your actual database logic
     try {
-        // This should query your database to get the current vote counts
-        // const post = await Post.findById(postId).populate('options');
-        // return {
-        //     optionA: post.options[0].votes,
-        //     optionB: post.options[1].votes,
-        //     total: post.options[0].votes + post.options[1].votes
-        // };
-        
-        // Placeholder - replace with actual database query
         console.log("Fetching updated vote counts for post:", postId);
         
-        // Return mock data for now - replace with real database query
+        // Get the post with all its options and their vote counts
+        const post = await prisma.post.findUnique({
+            where: { id: Number(postId) },
+            include: {
+                Option: {
+                    select: {
+                        id: true,
+                        option: true,
+                        count: true
+                    }
+                }
+            }
+        });
+        
+        if (!post) {
+            throw new Error("Post not found");
+        }
+        
+        const options = post.Option || [];
+        const total = options.reduce((sum, opt) => sum + opt.count, 0);
+        
         return {
-            optionA: Math.floor(Math.random() * 100) + 1,
-            optionB: Math.floor(Math.random() * 100) + 1,
-            total: 0 // Will be calculated
+            options: options.map(opt => ({
+                id: opt.id,
+                option: opt.option,
+                count: opt.count
+            })),
+            total: total
         };
         
     } catch (error) {

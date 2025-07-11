@@ -70,6 +70,13 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
 
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Add state for post creation step and post ID
+  const [postId, setPostId] = useState<number | null>(null);
+  const [isPostCreated, setIsPostCreated] = useState(false);
+  const [option1, setOption1] = useState("");
+  const [option2, setOption2] = useState("");
+  const [isOptionSubmitting, setIsOptionSubmitting] = useState(false);
+
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -108,7 +115,7 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
       formData.append("title", String(values.title));
       formData.append("description", String(values.description));
       formData.append("category", String(values.category));
-      formData.append("expire_at", values.expireAt.toISOString()); // Now values.expireAt is properly a Date object
+      formData.append("expire_at", values.expireAt.toISOString());
       formData.append("image", selectedImage);
 
       const response = await axios.post("http://localhost:8000/api/post/v1", formData, {
@@ -118,11 +125,19 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
         },
       });
 
-      toast.success("Post created successfully!");
-      form.reset();
-      setSelectedImage(null);
-      onClose();
-
+      // Expecting backend to return post ID (add this if not present)
+      const newPostId = response.data?.postId || response.data?.id || response.data?.data?.id;
+      if (newPostId) {
+        setPostId(newPostId);
+        setIsPostCreated(true);
+        toast.success("Post created! Now add options.");
+      } else {
+        toast.success("Post created, but could not get post ID.");
+      }
+      // Do not close dialog, do not reset form yet
+      // form.reset();
+      // setSelectedImage(null);
+      // onClose();
     } catch (error: any) {
       console.error("Error creating post:", error);
       if (error.response?.status === 422 && error.response.data.errors?.image) {
@@ -139,197 +154,297 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
     }
   };
 
+  // Handler for submitting options
+  const handleOptionSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!option1.trim() || !option2.trim()) {
+      toast.error("Both options are required");
+      return;
+    }
+    if (!user || !user.token) {
+      toast.error("Please log in to add options");
+      return;
+    }
+    if (!postId) {
+      toast.error("No post ID found");
+      return;
+    }
+    setIsOptionSubmitting(true);
+    try {
+      await axios.post(
+        "http://localhost:8000/api/post/add-options",
+        {
+          post_id: postId,
+          option1,
+          option2,
+        },
+        {
+          headers: {
+            Authorization: user.token,
+          },
+        }
+      );
+      toast.success("Options added successfully!");
+      // Reset all state and close dialog
+      setOption1("");
+      setOption2("");
+      setIsPostCreated(false);
+      setPostId(null);
+      form.reset();
+      setSelectedImage(null);
+      onClose();
+    } catch (error: any) {
+      toast.error("Failed to add options");
+    } finally {
+      setIsOptionSubmitting(false);
+    }
+  };
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-zinc-900 border-zinc-800 text-white">
         <DialogHeader>
-          <DialogTitle className="text-emerald-400">Create New Post</DialogTitle>
+          <DialogTitle className="text-emerald-400">
+            {isPostCreated ? "Add Options" : "Create New Post"}
+          </DialogTitle>
           <DialogDescription className="text-zinc-400">
-            Are you confused? Just post it and let the community help you decide!
+            {isPostCreated
+              ? "Add two options for your dilemma."
+              : "Are you confused? Just post it and let the community help you decide!"}
           </DialogDescription>
         </DialogHeader>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Title */}
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white">Title</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="What's your dilemma?"
-                      className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-400"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription className="text-zinc-400">
-                    A clear, concise title for your dilemma.
-                  </FormDescription>
-                  <FormMessage className="text-red-400" />
-                </FormItem>
-              )}
-            />
-
-            {/* Description */}
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white">Description</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Describe your situation in detail..."
-                      className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-400 min-h-[100px]"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription className="text-zinc-400">
-                    Provide context and details about your dilemma.
-                  </FormDescription>
-                  <FormMessage className="text-red-400" />
-                </FormItem>
-              )}
-            />
-
-            {/* Category */}
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white">Category</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+        {!isPostCreated ? (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* Title */}
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-white">Title</FormLabel>
                     <FormControl>
-                      <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
-                        <SelectValue placeholder="Select a category" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
-                      <SelectItem value="career">Career</SelectItem>
-                      <SelectItem value="relationship">Relationship</SelectItem>
-                      <SelectItem value="education">Education</SelectItem>
-                      <SelectItem value="lifestyle">Lifestyle</SelectItem>
-                      <SelectItem value="finance">Finance</SelectItem>
-                      <SelectItem value="health">Health</SelectItem>
-                      <SelectItem value="technology">Technology</SelectItem>
-                      <SelectItem value="travel">Travel</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormDescription className="text-zinc-400">
-                    Choose the category that best fits your dilemma.
-                  </FormDescription>
-                  <FormMessage className="text-red-400" />
-                </FormItem>
-              )}
-            />
-
-            {/* Expire At */}
-            <FormField
-              control={form.control}
-              name="expireAt"
-              render={({ field }) => (
-                <FormItem className="flex flex-col">
-                  <FormLabel className="text-white">Expire At</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full pl-3 text-left font-normal bg-zinc-800 border-zinc-700 text-white",
-                            !field.value && "text-zinc-400"
-                          )}
-                        >
-                          {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-zinc-900 border-zinc-700 text-white">
-                      <Calendar
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        disabled={(date) => date < new Date()}
+                      <Input
+                        placeholder="What's your dilemma?"
+                        className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-400"
+                        {...field}
                       />
-                    </PopoverContent>
-                  </Popover>
-                  <FormDescription className="text-zinc-400">
-                    When should this post expire?
-                  </FormDescription>
-                  <FormMessage className="text-red-400" />
-                </FormItem>
-              )}
-            />
+                    </FormControl>
+                    <FormDescription className="text-zinc-400">
+                      A clear, concise title for your dilemma.
+                    </FormDescription>
+                    <FormMessage className="text-red-400" />
+                  </FormItem>
+                )}
+              />
 
+              {/* Description */}
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-white">Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Describe your situation in detail..."
+                        className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-400 min-h-[100px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription className="text-zinc-400">
+                      Provide context and details about your dilemma.
+                    </FormDescription>
+                    <FormMessage className="text-red-400" />
+                  </FormItem>
+                )}
+              />
 
-            {/* Image Upload */}
-            <FormField
-              control={form.control}
-              name="image"
-              render={() => (
-                <FormItem>
-                  <FormLabel className="text-white">Image (Optional)</FormLabel>
-                  <FormControl>
-                    <div className="space-y-4">
-                      <label htmlFor="image-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-zinc-700 border-dashed rounded-lg cursor-pointer bg-zinc-800 hover:bg-zinc-700 transition-colors">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <Upload className="w-8 h-8 mb-4 text-zinc-400" />
-                          <p className="mb-2 text-sm text-zinc-400">
-                            <span className="font-semibold">Click to upload</span> or drag and drop
-                          </p>
-                          <p className="text-xs text-zinc-500">PNG, JPG, GIF up to 10MB</p>
-                        </div>
-                        <input
-                          id="image-upload"
-                          type="file"
-                          className="hidden"
-                          accept="image/*"
-                          onChange={handleImageChange}
+              {/* Category */}
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-white">Category</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
+                        <SelectItem value="career">Career</SelectItem>
+                        <SelectItem value="relationship">Relationship</SelectItem>
+                        <SelectItem value="education">Education</SelectItem>
+                        <SelectItem value="lifestyle">Lifestyle</SelectItem>
+                        <SelectItem value="finance">Finance</SelectItem>
+                        <SelectItem value="health">Health</SelectItem>
+                        <SelectItem value="technology">Technology</SelectItem>
+                        <SelectItem value="travel">Travel</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription className="text-zinc-400">
+                      Choose the category that best fits your dilemma.
+                    </FormDescription>
+                    <FormMessage className="text-red-400" />
+                  </FormItem>
+                )}
+              />
+
+              {/* Expire At */}
+              <FormField
+                control={form.control}
+                name="expireAt"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel className="text-white">Expire At</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full pl-3 text-left font-normal bg-zinc-800 border-zinc-700 text-white",
+                              !field.value && "text-zinc-400"
+                            )}
+                          >
+                            {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 bg-zinc-900 border-zinc-700 text-white">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) => date < new Date()}
                         />
-                      </label>
-                      {selectedImage && (
-                        <div className="text-sm text-emerald-400">
-                          Selected: {selectedImage.name}
-                        </div>
-                      )}
-                    </div>
-                  </FormControl>
-                  <FormDescription className="text-zinc-400">
-                    Add an image to help illustrate your dilemma.
-                  </FormDescription>
-                  <FormMessage className="text-red-400" />
-                </FormItem>
-              )}
-            />
+                      </PopoverContent>
+                    </Popover>
+                    <FormDescription className="text-zinc-400">
+                      When should this post expire?
+                    </FormDescription>
+                    <FormMessage className="text-red-400" />
+                  </FormItem>
+                )}
+              />
 
-            {/* Submit Button */}
+
+              {/* Image Upload */}
+              <FormField
+                control={form.control}
+                name="image"
+                render={() => (
+                  <FormItem>
+                    <FormLabel className="text-white">Image (Optional)</FormLabel>
+                    <FormControl>
+                      <div className="space-y-4">
+                        <label htmlFor="image-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-zinc-700 border-dashed rounded-lg cursor-pointer bg-zinc-800 hover:bg-zinc-700 transition-colors">
+                          <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                            <Upload className="w-8 h-8 mb-4 text-zinc-400" />
+                            <p className="mb-2 text-sm text-zinc-400">
+                              <span className="font-semibold">Click to upload</span> or drag and drop
+                            </p>
+                            <p className="text-xs text-zinc-500">PNG, JPG, GIF up to 10MB</p>
+                          </div>
+                          <input
+                            id="image-upload"
+                            type="file"
+                            className="hidden"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                          />
+                        </label>
+                        {selectedImage && (
+                          <div className="text-sm text-emerald-400">
+                            Selected: {selectedImage.name}
+                          </div>
+                        )}
+                      </div>
+                    </FormControl>
+                    <FormDescription className="text-zinc-400">
+                      Add an image to help illustrate your dilemma.
+                    </FormDescription>
+                    <FormMessage className="text-red-400" />
+                  </FormItem>
+                )}
+              />
+
+              {/* Submit Button */}
+              <div className="flex justify-end space-x-4 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onClose}
+                  className="border-zinc-700 text-white hover:bg-zinc-800"
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  className="bg-emerald-500 hover:bg-emerald-600 text-black font-medium"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Creating..." : "Create Post"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        ) : (
+          <form onSubmit={handleOptionSubmit} className="space-y-6">
+            <div>
+              <label className="block text-white mb-2">Option 1</label>
+              <Input
+                value={option1}
+                onChange={e => setOption1(e.target.value)}
+                placeholder="First option"
+                className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-400"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-white mb-2">Option 2</label>
+              <Input
+                value={option2}
+                onChange={e => setOption2(e.target.value)}
+                placeholder="Second option"
+                className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-400"
+                required
+              />
+            </div>
             <div className="flex justify-end space-x-4 pt-4">
               <Button
                 type="button"
                 variant="outline"
-                onClick={onClose}
+                onClick={() => {
+                  setIsPostCreated(false);
+                  setPostId(null);
+                  setOption1("");
+                  setOption2("");
+                  form.reset();
+                  setSelectedImage(null);
+                  onClose();
+                }}
                 className="border-zinc-700 text-white hover:bg-zinc-800"
-                disabled={isSubmitting}
+                disabled={isOptionSubmitting}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 className="bg-emerald-500 hover:bg-emerald-600 text-black font-medium"
-                disabled={isSubmitting}
+                disabled={isOptionSubmitting}
               >
-                {isSubmitting ? "Creating..." : "Create Post"}
+                {isOptionSubmitting ? "Adding..." : "Add Options"}
               </Button>
             </div>
           </form>
-        </Form>
+        )}
       </DialogContent>
     </Dialog>
   );
