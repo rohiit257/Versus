@@ -22,7 +22,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, ArrowLeft } from 'lucide-react'
 import { motion } from "framer-motion"
 import Link from 'next/link'
 import { signIn, useSession } from "next-auth/react"
@@ -94,27 +94,27 @@ export default function Login() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="min-h-screen flex items-center justify-center bg-background p-4">
             <motion.div
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
                 className="w-full max-w-md"
             >
-                <Card className="w-full shadow-2xl border border-neutral-800 bg-neutral-900/95 rounded-2xl">
-                    <CardHeader className="text-center space-y-2 pb-8">
+                <Card className="w-full shadow-2xl border border-border bg-card rounded-2xl">
+                    <CardHeader className="text-center space-y-2 pb-6 lg:pb-8">
                         <motion.div
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                            className="mx-auto w-12 h-12 bg-black border-2 border-white rounded-xl flex items-center justify-center mb-4"
+                            className="mx-auto w-12 h-12 bg-emerald-500 border-2 border-emerald-400 rounded-xl flex items-center justify-center mb-4"
                         >
                             <Lock className="w-6 h-6 text-white" />
                         </motion.div>
-                        <CardTitle className="text-2xl font-semibold text-white">Welcome back</CardTitle>
-                        <CardDescription className="text-neutral-400">Sign in to your account to continue</CardDescription>
+                        <CardTitle className="text-xl lg:text-2xl font-semibold text-foreground">Welcome back</CardTitle>
+                        <CardDescription className="text-muted-foreground text-sm lg:text-base">Sign in to your account to continue</CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-6">
+                    <CardContent className="space-y-4 lg:space-y-6 px-4 lg:px-6">
                         <Form {...form}>
                             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                                 <FormField
@@ -122,22 +122,22 @@ export default function Login() {
                                     name="email"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-white font-medium flex items-center gap-2">
-                                                <Mail className="text-neutral-400 w-4 h-4" /> Email
+                                            <FormLabel className="text-foreground font-medium flex items-center gap-2 text-sm lg:text-base">
+                                                <Mail className="text-muted-foreground w-4 h-4" /> Email
                                             </FormLabel>
                                             <FormControl>
                                                 <div className="relative">
-                                                    <Mail className="absolute left-3 top-3 h-4 w-4 text-neutral-500" />
+                                                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                                     <Input
                                                         placeholder="Enter your email"
                                                         type="email"
                                                         {...field}
                                                         disabled={isLoading}
-                                                        className="pl-10 h-12 bg-black border border-neutral-700 text-white placeholder-neutral-500 focus:ring-2 focus:ring-white/40 transition disabled:opacity-50"
+                                                        className="pl-10 h-11 lg:h-12 bg-input border border-border text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-ring transition disabled:opacity-50 text-sm lg:text-base"
                                                     />
                                                 </div>
                                             </FormControl>
-                                            <FormMessage className="text-yellow-400" />
+                                            <FormMessage className="text-red-400 text-xs lg:text-sm" />
                                         </FormItem>
                                     )}
                                 />
@@ -146,60 +146,58 @@ export default function Login() {
                                     name="password"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-white font-medium flex items-center gap-2">
-                                                <Lock className="text-neutral-400 w-4 h-4" /> Password
+                                            <FormLabel className="text-foreground font-medium flex items-center gap-2 text-sm lg:text-base">
+                                                <Lock className="text-muted-foreground w-4 h-4" /> Password
                                             </FormLabel>
                                             <FormControl>
                                                 <div className="relative">
-                                                    <Lock className="absolute left-3 top-3 h-4 w-4 text-neutral-500" />
+                                                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                                     <Input
                                                         placeholder="Enter your password"
                                                         type={showPassword ? "text" : "password"}
                                                         {...field}
                                                         disabled={isLoading}
-                                                        className="pl-10 pr-10 h-12 bg-black border border-neutral-700 text-white placeholder-neutral-500 focus:ring-2 focus:ring-white/40 transition disabled:opacity-50"
+                                                        className="pl-10 pr-10 h-11 lg:h-12 bg-input border border-border text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-ring transition disabled:opacity-50 text-sm lg:text-base"
                                                     />
                                                     <Button
                                                         type="button"
                                                         variant="ghost"
                                                         size="sm"
-                                                        className="absolute right-0 top-0 h-12 px-3 hover:bg-transparent"
+                                                        className="absolute right-0 top-0 h-11 lg:h-12 px-3 hover:bg-transparent"
                                                         onClick={() => setShowPassword(!showPassword)}
                                                         disabled={isLoading}
                                                     >
                                                         {showPassword ? (
-                                                            <EyeOff className="h-4 w-4 text-neutral-500" />
+                                                            <EyeOff className="h-4 w-4 text-muted-foreground" />
                                                         ) : (
-                                                            <Eye className="h-4 w-4 text-neutral-500" />
+                                                            <Eye className="h-4 w-4 text-muted-foreground" />
                                                         )}
                                                     </Button>
                                                 </div>
                                             </FormControl>
-                                            <FormMessage className="text-yellow-400" />
+                                            <FormMessage className="text-red-400 text-xs lg:text-sm" />
                                         </FormItem>
                                     )}
                                 />
                                 
                                 <div className="flex items-center justify-between pt-2">
-                                    <p className='text-sm text-neutral-400'>
-                                        <Link
-                                    href="/forget-password"
-                                    className="text-yellow-400 hover:text-yellow-300 underline"
-                                >
-                                    Forget Password?
-                                </Link>
-                                    </p>
-                                     
+                                    <Link
+                                        href="/forget-password"
+                                        className="text-sm text-emerald-500 hover:text-emerald-400 underline"
+                                    >
+                                        Forget Password?
+                                    </Link>
                                 </div>
 
                                 <motion.div
-                                    whileHover={{ scale: 1.03 }}
-                                    whileTap={{ scale: 0.97 }}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    className="pt-2"
                                 >
                                     <Button 
                                         type="submit" 
                                         disabled={isLoading}
-                                        className="w-full h-12 bg-white text-black font-bold shadow hover:bg-neutral-200 transition disabled:opacity-50"
+                                        className="w-full h-11 lg:h-12 bg-emerald-500 text-white font-semibold shadow hover:bg-emerald-600 transition disabled:opacity-50 text-sm lg:text-base"
                                     >
                                         {isLoading ? "Signing in..." : "Sign In"}
                                     </Button>
@@ -207,12 +205,12 @@ export default function Login() {
                             </form>
                         </Form>
                         
-                        <div className="text-center">
-                            <p className="text-sm text-neutral-400">
+                        <div className="text-center pt-4">
+                            <p className="text-sm text-muted-foreground">
                                 Don't have an account?{" "}
                                 <Link
                                     href="/register"
-                                    className="text-yellow-400 hover:text-yellow-300 underline"
+                                    className="text-emerald-500 hover:text-emerald-400 underline font-medium"
                                 >
                                     Sign up
                                 </Link>

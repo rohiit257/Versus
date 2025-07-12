@@ -353,14 +353,14 @@ export default function EnhancedTimelinePost({ post, index }: TimelinePostProps)
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.05 }}
-      className="relative bg-black border-b border-zinc-800 hover:bg-zinc-900/50 transition-colors duration-200 cursor-pointer"
+      className="relative bg-background border-b border-border hover:bg-muted/30 transition-colors duration-200 cursor-pointer"
     >
       {/* Post Container */}
       <div className="px-4 py-3">
         {/* Header: Avatar, Name, Username, Verified, Time, More Options */}
         <div className="flex items-start gap-3 mb-3">
           {/* Avatar */}
-          <div className="flex-shrink-0 h-12 w-12 rounded-full bg-zinc-800 flex items-center justify-center text-lg font-bold text-white">
+          <div className="flex-shrink-0 h-12 w-12 rounded-full bg-muted flex items-center justify-center text-lg font-bold text-foreground">
             {post.user.avatar ? (
               <img src={post.user.avatar} alt={post.user.name} className="h-12 w-12 rounded-full object-cover" />
             ) : (
@@ -372,14 +372,14 @@ export default function EnhancedTimelinePost({ post, index }: TimelinePostProps)
           <div className="flex-1 min-w-0">
             {/* User Header */}
             <div className="flex items-center gap-2 mb-1">
-              <span className="font-bold text-white text-base">{post.user.name}</span>
+              <span className="font-bold text-foreground text-base">{post.user.name}</span>
               {post.user.verified && <CheckCircle size={16} className="text-emerald-400 flex-shrink-0" />}
-              <span className="text-zinc-500 text-sm">@{post.user.username}</span>
-              <span className="text-zinc-500 text-sm">·</span>
-              <span className="text-zinc-500 text-sm">{post.timeAgo}</span>
+              <span className="text-muted-foreground text-sm">@{post.user.username}</span>
+              <span className="text-muted-foreground text-sm">·</span>
+              <span className="text-muted-foreground text-sm">{post.timeAgo}</span>
               {post.category && (
                 <>
-                  <span className="text-zinc-500 text-sm">·</span>
+                  <span className="text-muted-foreground text-sm">·</span>
                   <span className="text-emerald-500 text-sm font-medium">{post.category}</span>
                 </>
               )}
@@ -387,9 +387,9 @@ export default function EnhancedTimelinePost({ post, index }: TimelinePostProps)
 
             {/* Post Content */}
             <div className="mb-4">
-              <h2 className="text-white text-base leading-6 mb-2 font-normal">{post.title}</h2>
+              <h2 className="text-foreground text-base leading-6 mb-2 font-normal">{post.title}</h2>
               {post.description && (
-                <p className="text-zinc-300 text-base leading-6">{post.description}</p>
+                <p className="text-muted-foreground text-base leading-6">{post.description}</p>
               )}
             </div>
 
@@ -407,7 +407,7 @@ export default function EnhancedTimelinePost({ post, index }: TimelinePostProps)
                     className={`relative w-full text-left p-3 rounded-xl border transition-all duration-200 overflow-hidden
                       ${isSelected 
                         ? "border-emerald-500 bg-emerald-500/10 text-emerald-300" 
-                        : "border-zinc-700 bg-zinc-800/50 text-zinc-200 hover:bg-zinc-700/50"
+                        : "border-border bg-muted/50 text-foreground hover:bg-muted/70"
                       }
                       ${!isConnected || hasVoted ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}
                   >
@@ -417,7 +417,7 @@ export default function EnhancedTimelinePost({ post, index }: TimelinePostProps)
                       animate={{ width: `${percentages[idx]}%` }}
                       transition={{ duration: 1.2, ease: "easeOut" }}
                       className={`absolute left-0 top-0 h-full rounded-xl z-0 ${
-                        isSelected ? "bg-emerald-500/20" : "bg-zinc-600/30"
+                        isSelected ? "bg-emerald-500/20" : "bg-muted/40"
                       }`}
                       style={{ pointerEvents: 'none' }}
                     />
@@ -426,7 +426,7 @@ export default function EnhancedTimelinePost({ post, index }: TimelinePostProps)
                       <div className="flex-1">
                         <span className="font-medium text-sm block">{opt.title}</span>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xs text-zinc-400">
+                          <span className="text-xs text-muted-foreground">
                             {animateVote.trigger && animateVote.optionId === opt.id && userVote === opt.id
                               ? <CountUp start={0} end={optionVotes[idx]} duration={1.2} />
                               : optionVotes[idx]
@@ -449,7 +449,7 @@ export default function EnhancedTimelinePost({ post, index }: TimelinePostProps)
             </div>
 
             {/* Actions Bar */}
-            <div className="flex items-center justify-between text-zinc-500">
+            <div className="flex items-center justify-between text-muted-foreground">
               <div className="flex items-center gap-8">
                 <button
                   onClick={() => setShowComments(!showComments)}
@@ -467,7 +467,7 @@ export default function EnhancedTimelinePost({ post, index }: TimelinePostProps)
               
               {/* Vote Status */}
               <div className="flex items-center gap-2 text-xs">
-                <span className="text-zinc-400">
+                <span className="text-muted-foreground">
                   {totalVotes} votes
                 </span>
                 {hasVoted && (
@@ -481,8 +481,8 @@ export default function EnhancedTimelinePost({ post, index }: TimelinePostProps)
           </div>
           
           {/* More Options Button */}
-          <button className="flex-shrink-0 p-1 rounded-full hover:bg-zinc-800 transition-colors">
-            <MoreHorizontal size={16} className="text-zinc-500" />
+          <button className="flex-shrink-0 p-1 rounded-full hover:bg-muted transition-colors">
+            <MoreHorizontal size={16} className="text-muted-foreground" />
           </button>
         </div>
       </div>
@@ -495,35 +495,35 @@ export default function EnhancedTimelinePost({ post, index }: TimelinePostProps)
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="border-t border-zinc-800 bg-zinc-900/30"
+            className="border-t border-border bg-muted/20"
           >
             <div className="p-4 space-y-4">
               {/* Comments List */}
               {comments.length === 0 ? (
                 <div className="text-center py-6">
-                  <MessageCircle size={24} className="text-zinc-500 mx-auto mb-2" />
-                  <p className="text-zinc-400 text-sm">No comments yet</p>
-                  <p className="text-zinc-500 text-xs">Be the first to share your thoughts!</p>
+                  <MessageCircle size={24} className="text-muted-foreground mx-auto mb-2" />
+                  <p className="text-muted-foreground text-sm">No comments yet</p>
+                  <p className="text-muted-foreground text-xs">Be the first to share your thoughts!</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {comments.map((comment) => (
                     <div key={comment.id} className="flex gap-3">
-                      <div className="h-8 w-8 rounded-full bg-zinc-800 flex items-center justify-center flex-shrink-0">
-                        <span className="text-xs font-bold text-white">
+                      <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-bold text-foreground">
                           {comment.user?.name?.charAt(0) || "U"}
                         </span>
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-medium text-white">
+                          <span className="text-sm font-medium text-foreground">
                             {comment.user?.name || "Anonymous"}
                           </span>
-                          <span className="text-xs text-zinc-500">
+                          <span className="text-xs text-muted-foreground">
                             {new Date(comment.created_at).toLocaleDateString()}
                           </span>
                         </div>
-                        <p className="text-zinc-200 text-sm leading-relaxed">
+                        <p className="text-muted-foreground text-sm leading-relaxed">
                           {comment.content}
                         </p>
                       </div>
@@ -545,7 +545,7 @@ export default function EnhancedTimelinePost({ post, index }: TimelinePostProps)
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
                     placeholder={user ? "Add a comment..." : "Login to comment"}
-                    className="flex-1 bg-transparent border-none outline-none text-zinc-200 placeholder-zinc-500 text-sm"
+                    className="flex-1 bg-transparent border-none outline-none text-foreground placeholder-muted-foreground text-sm"
                     disabled={!user || isCommenting}
                   />
                   {user && newComment.trim() && (

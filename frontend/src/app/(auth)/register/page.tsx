@@ -22,7 +22,7 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 import { motion } from "framer-motion"
-import { User, Mail, Lock, CheckCircle2, Loader2 } from "lucide-react"
+import { User, Mail, Lock, CheckCircle2, Loader2, Eye, EyeOff } from "lucide-react"
 import Link from 'next/link'
 import axios from 'axios'
 import { toast } from "sonner"
@@ -46,6 +46,8 @@ const formSchema = z.object({
 
 export default function Register() {
     const [isLoading, setIsLoading] = useState(false)
+    const [showPassword, setShowPassword] = useState(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error', message: string } | null>(null)
 
         const {data:session} = useSession()
@@ -133,29 +135,29 @@ export default function Register() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="min-h-screen flex items-center justify-center bg-background p-4">
             <motion.div
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
                 className="w-full max-w-md"
             >
-                <Card className="bg-neutral-900 border border-neutral-800 shadow-2xl rounded-2xl">
-                    <CardHeader className="text-center">
+                <Card className="bg-card border border-border shadow-2xl rounded-2xl">
+                    <CardHeader className="text-center space-y-2 pb-6 lg:pb-8">
                         <motion.div
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                            className="flex justify-center mb-2"
+                            className="flex justify-center mb-4"
                         >
-                            <CheckCircle2 className="text-white text-4xl bg-black rounded-full border-2 border-white p-2" />
+                            <CheckCircle2 className="text-emerald-500 text-4xl bg-emerald-100 dark:bg-emerald-900/20 rounded-full border-2 border-emerald-200 dark:border-emerald-800 p-2" />
                         </motion.div>
-                        <CardTitle className="text-3xl font-extrabold text-white tracking-tight">Create Account</CardTitle>
-                        <CardDescription className="text-neutral-400 mt-2">Join Versus and start your journey</CardDescription>
+                        <CardTitle className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight">Create Account</CardTitle>
+                        <CardDescription className="text-muted-foreground mt-2 text-sm lg:text-base">Join Versus and start your journey</CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="px-4 lg:px-6">
                         <Form {...form}>
-                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 lg:space-y-6">
                                 {/* Display success/error message */}
                                 {submitMessage && (
                                     <motion.div
@@ -163,8 +165,8 @@ export default function Register() {
                                         animate={{ opacity: 1, y: 0 }}
                                         className={`p-3 rounded-lg text-sm font-medium ${
                                             submitMessage.type === 'success' 
-                                                ? 'bg-green-900/50 text-green-300 border border-green-700' 
-                                                : 'bg-red-900/50 text-red-300 border border-red-700'
+                                                ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800' 
+                                                : 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800'
                                         }`}
                                     >
                                         {submitMessage.message}
@@ -176,18 +178,18 @@ export default function Register() {
                                     name="name"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-white flex items-center gap-2">
-                                                <User className="text-neutral-400 w-4 h-4" /> Name
+                                            <FormLabel className="text-foreground flex items-center gap-2 text-sm lg:text-base">
+                                                <User className="text-muted-foreground w-4 h-4" /> Name
                                             </FormLabel>
                                             <FormControl>
                                                 <Input
                                                     placeholder="Your Name"
                                                     {...field}
                                                     disabled={isLoading}
-                                                    className="bg-black border border-neutral-700 text-white placeholder-neutral-500 focus:ring-2 focus:ring-white/40 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    className="bg-input border border-border text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-ring transition disabled:opacity-50 disabled:cursor-not-allowed text-sm lg:text-base h-11 lg:h-12"
                                                 />
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-red-400 text-xs lg:text-sm" />
                                         </FormItem>
                                     )}
                                 />
@@ -196,8 +198,8 @@ export default function Register() {
                                     name="email"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-white flex items-center gap-2">
-                                                <Mail className="text-neutral-400 w-4 h-4" /> Email
+                                            <FormLabel className="text-foreground flex items-center gap-2 text-sm lg:text-base">
+                                                <Mail className="text-muted-foreground w-4 h-4" /> Email
                                             </FormLabel>
                                             <FormControl>
                                                 <Input
@@ -205,10 +207,10 @@ export default function Register() {
                                                     type="email"
                                                     {...field}
                                                     disabled={isLoading}
-                                                    className="bg-black border border-neutral-700 text-white placeholder-neutral-500 focus:ring-2 focus:ring-white/40 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    className="bg-input border border-border text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-ring transition disabled:opacity-50 disabled:cursor-not-allowed text-sm lg:text-base h-11 lg:h-12"
                                                 />
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-red-400 text-xs lg:text-sm" />
                                         </FormItem>
                                     )}
                                 />
@@ -217,19 +219,36 @@ export default function Register() {
                                     name="password"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-white flex items-center gap-2">
-                                                <Lock className="text-neutral-400 w-4 h-4" /> Password
+                                            <FormLabel className="text-foreground flex items-center gap-2 text-sm lg:text-base">
+                                                <Lock className="text-muted-foreground w-4 h-4" /> Password
                                             </FormLabel>
                                             <FormControl>
-                                                <Input
-                                                    placeholder="••••••••"
-                                                    type="password"
-                                                    {...field}
-                                                    disabled={isLoading}
-                                                    className="bg-black border border-neutral-700 text-white placeholder-neutral-500 focus:ring-2 focus:ring-white/40 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                                                />
+                                                <div className="relative">
+                                                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                                    <Input
+                                                        placeholder="••••••••"
+                                                        type={showPassword ? "text" : "password"}
+                                                        {...field}
+                                                        disabled={isLoading}
+                                                        className="pl-10 pr-10 bg-input border border-border text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-ring transition disabled:opacity-50 disabled:cursor-not-allowed text-sm lg:text-base h-11 lg:h-12"
+                                                    />
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="absolute right-0 top-0 h-11 lg:h-12 px-3 hover:bg-transparent"
+                                                        onClick={() => setShowPassword(!showPassword)}
+                                                        disabled={isLoading}
+                                                    >
+                                                        {showPassword ? (
+                                                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                                        ) : (
+                                                            <Eye className="h-4 w-4 text-muted-foreground" />
+                                                        )}
+                                                    </Button>
+                                                </div>
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-red-400 text-xs lg:text-sm" />
                                         </FormItem>
                                     )}
                                 />
@@ -238,52 +257,75 @@ export default function Register() {
                                     name="confirmPassword"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-white flex items-center gap-2">
-                                                <Lock className="text-neutral-400 w-4 h-4" /> Confirm Password
+                                            <FormLabel className="text-foreground flex items-center gap-2 text-sm lg:text-base">
+                                                <Lock className="text-muted-foreground w-4 h-4" /> Confirm Password
                                             </FormLabel>
                                             <FormControl>
-                                                <Input
-                                                    placeholder="••••••••"
-                                                    type="password"
-                                                    {...field}
-                                                    disabled={isLoading}
-                                                    className="bg-black border border-neutral-700 text-white placeholder-neutral-500 focus:ring-2 focus:ring-white/40 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                                                />
+                                                <div className="relative">
+                                                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                                    <Input
+                                                        placeholder="••••••••"
+                                                        type={showConfirmPassword ? "text" : "password"}
+                                                        {...field}
+                                                        disabled={isLoading}
+                                                        className="pl-10 pr-10 bg-input border border-border text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-ring transition disabled:opacity-50 disabled:cursor-not-allowed text-sm lg:text-base h-11 lg:h-12"
+                                                    />
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="absolute right-0 top-0 h-11 lg:h-12 px-3 hover:bg-transparent"
+                                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                        disabled={isLoading}
+                                                    >
+                                                        {showConfirmPassword ? (
+                                                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                                                        ) : (
+                                                            <Eye className="h-4 w-4 text-muted-foreground" />
+                                                        )}
+                                                    </Button>
+                                                </div>
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-red-400 text-xs lg:text-sm" />
                                         </FormItem>
                                     )}
                                 />
+
                                 <motion.div
-                                    whileHover={{ scale: isLoading ? 1 : 1.03 }}
-                                    whileTap={{ scale: isLoading ? 1 : 0.97 }}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    className="pt-2"
                                 >
-                                    <Button
-                                        type="submit"
+                                    <Button 
+                                        type="submit" 
                                         disabled={isLoading}
-                                        className="w-full bg-white text-black font-bold py-2 rounded-lg shadow hover:bg-neutral-200 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white"
+                                        className="w-full h-11 lg:h-12 bg-emerald-500 text-white font-semibold shadow hover:bg-emerald-600 transition disabled:opacity-50 text-sm lg:text-base"
                                     >
                                         {isLoading ? (
-                                            <>
-                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                Registering...
-                                            </>
+                                            <div className="flex items-center gap-2">
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                Creating account...
+                                            </div>
                                         ) : (
-                                            'Register'
+                                            "Create Account"
                                         )}
                                     </Button>
                                 </motion.div>
                             </form>
                         </Form>
+                        
+                        <div className="text-center pt-4">
+                            <p className="text-sm text-muted-foreground">
+                                Already have an account?{" "}
+                                <Link
+                                    href="/login"
+                                    className="text-emerald-500 hover:text-emerald-400 underline font-medium"
+                                >
+                                    Sign in
+                                </Link>
+                            </p>
+                        </div>
                     </CardContent>
-                    <CardFooter>
-                        <p className="text-sm text-neutral-400 w-full text-center">
-                            Already have an account?{" "}
-                            <Link href="/login" className="text-white underline hover:text-neutral-200 transition">
-                                Login
-                            </Link>
-                        </p>
-                    </CardFooter>
                 </Card>
             </motion.div>
         </div>

@@ -10,6 +10,7 @@ import {
 import SidebarClient from "@/components/base/navbar/SidebarClient"
 import RightSidebar from "@/components/base/navbar/RightSidebar"
 import TimelinePost from "@/components/base/TimeLinePost"
+import { Breadcrumb } from "@/components/ui/breadcrumb"
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 
@@ -249,10 +250,10 @@ export default function EnhancedTimeline({ initialData }: EnhancedTimelineProps)
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black">
+      <div className="min-h-screen bg-background">
         <SidebarClient />
         <RightSidebar />
-        <div className="ml-64 mr-80 flex items-center justify-center min-h-screen">
+        <div className="lg:ml-64 lg:mr-80 flex items-center justify-center min-h-screen px-4">
           <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
             <motion.div className="relative mx-auto mb-8 h-20 w-20">
               <motion.div
@@ -269,11 +270,11 @@ export default function EnhancedTimeline({ initialData }: EnhancedTimelineProps)
             <motion.h2
               animate={{ opacity: [0.5, 1, 0.5] }}
               transition={{ duration: 2, repeat: Infinity }}
-              className="text-3xl font-bold text-white mb-4"
+              className="text-3xl font-bold text-foreground mb-4"
             >
               Loading Timeline
             </motion.h2>
-            <p className="text-zinc-400 text-lg">Fetching the latest posts...</p>
+            <p className="text-muted-foreground text-lg">Fetching the latest posts...</p>
           </motion.div>
         </div>
       </div>
@@ -282,10 +283,10 @@ export default function EnhancedTimeline({ initialData }: EnhancedTimelineProps)
 
   if (error) {
     return (
-      <div className="min-h-screen bg-black">
+      <div className="min-h-screen bg-background">
         <SidebarClient />
         <RightSidebar />
-        <div className="ml-64 mr-80 flex items-center justify-center min-h-screen">
+        <div className="lg:ml-64 lg:mr-80 flex items-center justify-center min-h-screen px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -298,8 +299,8 @@ export default function EnhancedTimeline({ initialData }: EnhancedTimelineProps)
             >
               <AlertCircle size={48} className="text-red-400" />
             </motion.div>
-            <h2 className="text-3xl font-bold text-white mb-4">Something went wrong</h2>
-            <p className="text-zinc-400 mb-8 text-lg">{error}</p>
+            <h2 className="text-3xl font-bold text-foreground mb-4">Something went wrong</h2>
+            <p className="text-muted-foreground mb-8 text-lg">{error}</p>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -316,7 +317,7 @@ export default function EnhancedTimeline({ initialData }: EnhancedTimelineProps)
   }
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-background">
       {/* Left Sidebar */}
       <SidebarClient />
 
@@ -324,47 +325,63 @@ export default function EnhancedTimeline({ initialData }: EnhancedTimelineProps)
       <RightSidebar />
 
       {/* Main Content - Timeline */}
-      <main className="ml-64 mr-80 min-h-screen">
+      <main className="lg:ml-64 lg:mr-80 min-h-screen">
         {/* Header */}
-        <div className="sticky top-0 z-30 bg-black/80 backdrop-blur-xl border-b border-zinc-800">
-          <div className="flex items-center justify-between px-8 py-6">
-            <div className="flex items-center gap-4">
+        <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-xl border-b border-border/50">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between px-4 lg:px-8 py-4 lg:py-8 gap-4">
+            <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-6">
+              {/* Breadcrumb */}
+              <Breadcrumb className="mb-2 lg:mb-0" />
+              
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="flex items-center gap-3"
+                className="flex items-center gap-4"
               >
-                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
-                  <Activity size={16} className="text-black" />
+                <div className="flex flex-col">
+                  <h1 className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight">Timeline</h1>
+                  <p className="text-sm text-muted-foreground mt-1">Discover and vote on trending topics</p>
                 </div>
-                <h1 className="text-2xl font-bold text-white">Timeline</h1>
               </motion.div>
+              
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20"
+                className="flex items-center gap-2 lg:gap-3 flex-wrap"
               >
-                <div className="h-2 w-2 bg-emerald-400 rounded-full animate-pulse" />
-                <span className="text-xs font-medium text-emerald-400">Live</span>
+                <div className="flex items-center gap-2 px-3 lg:px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                  <div className="h-2 w-2 bg-emerald-400 rounded-full animate-pulse" />
+                  <span className="text-xs lg:text-sm font-medium text-emerald-400">Live Updates</span>
+                </div>
+                
+                <div className="flex items-center gap-2 px-3 lg:px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20">
+                  <span className="text-xs lg:text-sm font-medium text-blue-400">{posts.length} Posts</span>
+                </div>
               </motion.div>
             </div>
 
-            {/* Refresh Button */}
+            {/* Enhanced Refresh Button */}
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={handleRefresh}
               disabled={isRefreshing}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-800/50 text-zinc-300 hover:bg-emerald-500/15 hover:text-emerald-400 transition-all duration-200 border border-zinc-700/40 hover:border-emerald-500/40"
+              className="flex items-center gap-3 px-4 lg:px-6 py-2 lg:py-3 rounded-xl bg-muted/50 text-foreground hover:bg-muted/70 transition-all duration-300 border border-border/50 hover:border-border self-start lg:self-auto"
             >
-              <RefreshCw size={16} className={isRefreshing ? "animate-spin" : ""} />
-              <span className="text-sm font-medium">Refresh</span>
+              <div className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}>
+                {isRefreshing ? (
+                  <div className="w-4 h-4 border-2 border-foreground/20 border-t-foreground rounded-full" />
+                ) : (
+                  <div className="w-4 h-4 border-2 border-foreground/40 border-t-foreground rounded-full" />
+                )}
+              </div>
+              <span className="text-sm font-medium">{isRefreshing ? "Refreshing..." : "Refresh"}</span>
             </motion.button>
           </div>
         </div>
 
         {/* Timeline Posts */}
-        <div className="px-8 py-6">
+        <div className="px-4 lg:px-8 py-6">
           {posts.length === 0 ? (
             <motion.div
               initial={{ opacity: 0, y: 20 }}

@@ -6,7 +6,7 @@ import Navbar from "./navbar/NavbarClient";
 
 export function HeroSectionOne() {
   return (
-    <div className="relative mx-auto my-10 flex max-w-7xl flex-col items-center justify-center bg-black">
+    <div className="relative mx-auto my-10 flex max-w-7xl flex-col items-center justify-center bg-background">
       <Navbar />
 
       {/* Gradient lines */}
@@ -21,7 +21,7 @@ export function HeroSectionOne() {
       </div>
 
       <div className="px-4 py-10 md:py-20">
-        <h1 className="relative z-10 mx-auto max-w-4xl text-center text-2xl font-bold text-white md:text-4xl lg:text-7xl">
+        <h1 className="relative z-10 mx-auto max-w-4xl text-center text-2xl font-bold text-foreground md:text-4xl lg:text-7xl">
           {"Can't decide? Let the community help you choose!"
             .split(" ")
             .map((word, index) => (
@@ -60,7 +60,7 @@ export function HeroSectionOne() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="w-60 rounded-lg bg-zinc-800 px-6 py-2 font-medium text-white transition-all duration-300 border border-zinc-700 hover:bg-zinc-700"
+              className="w-60 rounded-lg bg-muted px-6 py-2 font-medium text-foreground transition-all duration-300 border border-border hover:bg-muted/80"
             >
               Get Started
             </motion.button>
@@ -82,7 +82,7 @@ export function HeroSectionOne() {
           transition={{ duration: 0.3, delay: 1.2 }}
           className="relative z-10 mt-20"
         >
-          <h2 className="text-2xl font-bold text-center text-white mb-12">How Versus Works</h2>
+          <h2 className="text-2xl font-bold text-center text-foreground mb-12">How Versus Works</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               { step: "1", title: "Share Your Dilemma", desc: "Post your question with two choices you're torn between" },
@@ -90,10 +90,10 @@ export function HeroSectionOne() {
               { step: "3", title: "Make Your Choice", desc: "Get insights from the community to make the best decision" },
             ].map((item, idx) => (
               <div key={idx} className="text-center">
-                <div className="mx-auto mb-4 w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center border border-zinc-700">
+                <div className="mx-auto mb-4 w-16 h-16 bg-muted rounded-full flex items-center justify-center border border-border">
                   <span className="text-emerald-400 text-2xl font-bold">{item.step}</span>
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">{item.title}</h3>
+                <h3 className="text-xl font-semibold text-foreground mb-2">{item.title}</h3>
                 <p className="text-emerald-400">{item.desc}</p>
               </div>
             ))}
@@ -105,12 +105,12 @@ export function HeroSectionOne() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 1.5 }}
-          className="relative z-10 mt-20 rounded-3xl border border-emerald-500 bg-zinc-900 p-8 shadow-xl animate-border-glow-emerald"
+          className="relative z-10 mt-20 rounded-3xl border border-emerald-500 bg-card p-8 shadow-xl animate-border-glow-emerald"
         >
-          <h3 className="text-2xl font-bold text-center text-white mb-8">See How It Works</h3>
+          <h3 className="text-2xl font-bold text-center text-foreground mb-8">See How It Works</h3>
           <div className="space-y-6">
             <div className="text-center">
-              <p className="text-lg font-semibold text-white">Should I take the job offer in another city?</p>
+              <p className="text-lg font-semibold text-foreground">Should I take the job offer in another city?</p>
               <p className="text-sm text-emerald-400 mt-2">Posted by @user123</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -128,9 +128,9 @@ export function HeroSectionOne() {
               ].map((opt, idx) => (
                 <div
                   key={idx}
-                  className="bg-zinc-800 rounded-lg p-4 border border-zinc-700"
+                  className="bg-muted rounded-lg p-4 border border-border"
                 >
-                  <h4 className="font-semibold text-white mb-2">{opt.title}</h4>
+                  <h4 className="font-semibold text-foreground mb-2">{opt.title}</h4>
                   <p className="text-sm text-emerald-400 mb-3">{opt.desc}</p>
                   <div className="flex items-center justify-between">
                     <span className="text-emerald-400 font-semibold">{opt.votes}</span>

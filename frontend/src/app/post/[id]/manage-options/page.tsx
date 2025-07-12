@@ -61,7 +61,7 @@ export default function ManageOptionsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black">
+      <div className="min-h-screen bg-background">
         <SidebarClient user={user} />
         <div className="ml-20 flex items-center justify-center min-h-screen">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
@@ -72,7 +72,7 @@ export default function ManageOptionsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-black">
+      <div className="min-h-screen bg-background">
         <SidebarClient user={user} />
         <div className="ml-20 flex items-center justify-center min-h-screen">
           <div className="text-center">
@@ -91,10 +91,10 @@ export default function ManageOptionsPage() {
 
   if (!post) {
     return (
-      <div className="min-h-screen bg-black">
+      <div className="min-h-screen bg-background">
         <SidebarClient user={user} />
         <div className="ml-20 flex items-center justify-center min-h-screen">
-          <div className="text-center text-white">Post not found</div>
+          <div className="text-center text-foreground">Post not found</div>
         </div>
       </div>
     );
@@ -102,10 +102,10 @@ export default function ManageOptionsPage() {
 
   if (post.user.id !== user?.id) {
     return (
-      <div className="min-h-screen bg-black">
+      <div className="min-h-screen bg-background">
         <SidebarClient user={user} />
         <div className="ml-20 flex items-center justify-center min-h-screen">
-          <div className="text-center text-zinc-400">Only the post owner can manage options.</div>
+          <div className="text-center text-muted-foreground">Only the post owner can manage options.</div>
         </div>
       </div>
     );
@@ -153,31 +153,31 @@ export default function ManageOptionsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-background">
       <SidebarClient user={user} />
       
       <div className="ml-20 p-6">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-2xl font-bold text-white mb-2">Manage Options</h1>
-            <p className="text-zinc-400">Add exactly 2 options to your post</p>
+            <h1 className="text-2xl font-bold text-foreground mb-2">Manage Options</h1>
+            <p className="text-muted-foreground">Add exactly 2 options to your post</p>
           </div>
 
           {/* Post Preview */}
-          <div className="mb-8 p-6 rounded-xl bg-zinc-900 border border-zinc-800">
+          <div className="mb-8 p-6 rounded-xl bg-card border border-border">
             <div className="flex items-center gap-3 mb-4">
               <div className="h-10 w-10 rounded-full bg-emerald-500 flex items-center justify-center text-black font-bold">
                 {post.user.name[0]}
               </div>
               <div>
-                <div className="font-semibold text-white">{post.user.name}</div>
-                <div className="text-xs text-zinc-400">@{post.user.email.split("@")[0]}</div>
+                <div className="font-semibold text-foreground">{post.user.name}</div>
+                <div className="text-xs text-muted-foreground">@{post.user.email.split("@")[0]}</div>
               </div>
             </div>
-            <h2 className="text-lg font-semibold text-white mb-2">{post.title}</h2>
-            <p className="text-zinc-300 text-sm mb-2">{post.description}</p>
-            <span className="inline-block px-2 py-1 rounded-full bg-zinc-800 text-zinc-400 text-xs">
+            <h2 className="text-lg font-semibold text-foreground mb-2">{post.title}</h2>
+            <p className="text-muted-foreground text-sm mb-2">{post.description}</p>
+            <span className="inline-block px-2 py-1 rounded-full bg-muted text-muted-foreground text-xs">
               {post.category}
             </span>
           </div>
@@ -185,11 +185,11 @@ export default function ManageOptionsPage() {
           {/* Current Options */}
           {post.Option.length > 0 && (
             <div className="mb-8">
-              <h3 className="text-lg font-semibold text-white mb-4">Current Options</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Current Options</h3>
               <div className="space-y-3">
                 {post.Option.map((opt) => (
-                  <div key={opt.id} className="p-4 rounded-lg bg-zinc-900 border border-zinc-800">
-                    <span className="text-white font-medium">{opt.option}</span>
+                  <div key={opt.id} className="p-4 rounded-lg bg-card border border-border">
+                    <span className="text-foreground font-medium">{opt.option}</span>
                   </div>
                 ))}
               </div>
@@ -198,19 +198,19 @@ export default function ManageOptionsPage() {
 
           {/* Add Options Form */}
           {post.Option.length < MAX_OPTIONS && (
-            <div className="bg-zinc-900 p-6 rounded-xl border border-zinc-800">
-              <h3 className="text-lg font-semibold text-white mb-4">Add Options</h3>
+            <div className="bg-card p-6 rounded-xl border border-border">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Add Options</h3>
               <form onSubmit={handleAddOptions} className="space-y-4">
                 {options.map((opt, idx) => (
                   <div key={idx}>
-                    <label className="block text-sm font-medium text-zinc-300 mb-2">
+                    <label className="block text-sm font-medium text-muted-foreground mb-2">
                       Option {idx + 1}
                     </label>
                     <input
                       value={opt}
                       onChange={e => handleOptionChange(idx, e.target.value)}
                       placeholder={`Enter option ${idx + 1}`}
-                      className="w-full p-3 rounded-lg bg-zinc-800 border border-zinc-700 text-white placeholder-zinc-500 focus:border-emerald-500 focus:outline-none transition-colors"
+                      className="w-full p-3 rounded-lg bg-input border border-border text-foreground placeholder-muted-foreground focus:border-emerald-500 focus:outline-none transition-colors"
                       required
                       maxLength={100}
                       disabled={submitting}
@@ -242,8 +242,8 @@ export default function ManageOptionsPage() {
               <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-emerald-500/20 flex items-center justify-center">
                 <span className="text-2xl">✅</span>
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2">Options Complete</h3>
-              <p className="text-zinc-400">Your post is ready for voting!</p>
+              <h3 className="text-lg font-semibold text-foreground mb-2">Options Complete</h3>
+              <p className="text-muted-foreground">Your post is ready for voting!</p>
             </div>
           )}
         </div>

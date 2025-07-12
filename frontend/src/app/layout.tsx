@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { SessionProviderWrapper } from "@/components/providers/SessionProviderWrapper";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,23 +28,30 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased dark`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <SessionProviderWrapper>
-          {children}
-          <Toaster
-            position="top-right"
-            richColors
-            closeButton
-            toastOptions={{
-              className: "bg-neutral-900 text-white",
-              style: {
-                backgroundColor: "var(--geist-background)",
-                color: "var(--geist-text)",
-              },
-            }}
-          />
-        </SessionProviderWrapper>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <SessionProviderWrapper>
+            {children}
+            <Toaster
+              position="top-right"
+              richColors
+              closeButton
+              toastOptions={{
+                className: "bg-neutral-900 text-white",
+                style: {
+                  backgroundColor: "var(--geist-background)",
+                  color: "var(--geist-text)",
+                },
+              }}
+            />
+          </SessionProviderWrapper>
+        </ThemeProvider>
       </body>
     </html>
   );

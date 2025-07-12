@@ -87,35 +87,35 @@ export default function ForgotPassword() {
 
     if (isSubmitted) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-black">
+            <div className="min-h-screen flex items-center justify-center bg-background p-4">
                 <motion.div
                     initial={{ opacity: 0, y: 40 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, ease: "easeOut" }}
                     className="w-full max-w-md"
                 >
-                    <Card className="w-full shadow-2xl border border-neutral-800 bg-neutral-900/95 rounded-2xl">
-                        <CardHeader className="text-center space-y-2 pb-8">
+                    <Card className="w-full shadow-2xl border border-border bg-card rounded-2xl">
+                        <CardHeader className="text-center space-y-2 pb-6 lg:pb-8">
                             <motion.div
                                 initial={{ scale: 0.8, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                                className="mx-auto w-12 h-12 bg-green-600 border-2 border-green-400 rounded-xl flex items-center justify-center mb-4"
+                                className="mx-auto w-12 h-12 bg-emerald-500 border-2 border-emerald-400 rounded-xl flex items-center justify-center mb-4"
                             >
                                 <Mail className="w-6 h-6 text-white" />
                             </motion.div>
-                            <CardTitle className="text-2xl font-semibold text-white">Check your email</CardTitle>
-                            <CardDescription className="text-neutral-400">
+                            <CardTitle className="text-xl lg:text-2xl font-semibold text-foreground">Check your email</CardTitle>
+                            <CardDescription className="text-muted-foreground text-sm lg:text-base">
                                 We've sent a password reset link to your email address
                             </CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-6">
+                        <CardContent className="space-y-4 lg:space-y-6 px-4 lg:px-6">
                             <div className="text-center space-y-4">
-                                <p className="text-sm text-neutral-400">
+                                <p className="text-sm text-muted-foreground">
                                     Didn't receive the email? Check your spam folder or{" "}
                                     <Button
                                         variant="link"
-                                        className="text-yellow-400 hover:text-yellow-300 p-0 h-auto font-normal underline"
+                                        className="text-emerald-500 hover:text-emerald-400 p-0 h-auto font-normal underline"
                                         onClick={() => {
                                             setIsSubmitted(false)
                                             form.reset()
@@ -126,7 +126,7 @@ export default function ForgotPassword() {
                                 </p>
                                 <Link
                                     href="/login"
-                                    className="inline-flex items-center gap-2 text-sm text-yellow-400 hover:text-yellow-300 underline"
+                                    className="inline-flex items-center gap-2 text-sm text-emerald-500 hover:text-emerald-400 underline"
                                 >
                                     <ArrowLeft className="w-4 h-4" />
                                     Back to login
@@ -140,29 +140,29 @@ export default function ForgotPassword() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="min-h-screen flex items-center justify-center bg-background p-4">
             <motion.div
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
                 className="w-full max-w-md"
             >
-                <Card className="w-full shadow-2xl border border-neutral-800 bg-neutral-900/95 rounded-2xl">
-                    <CardHeader className="text-center space-y-2 pb-8">
+                <Card className="w-full shadow-2xl border border-border bg-card rounded-2xl">
+                    <CardHeader className="text-center space-y-2 pb-6 lg:pb-8">
                         <motion.div
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                            className="mx-auto w-12 h-12 bg-black border-2 border-white rounded-xl flex items-center justify-center mb-4"
+                            className="mx-auto w-12 h-12 bg-foreground border-2 border-background rounded-xl flex items-center justify-center mb-4"
                         >
-                            <KeyRound className="w-6 h-6 text-white" />
+                            <KeyRound className="w-6 h-6 text-background" />
                         </motion.div>
-                        <CardTitle className="text-2xl font-semibold text-white">Forgot password?</CardTitle>
-                        <CardDescription className="text-neutral-400">
+                        <CardTitle className="text-xl lg:text-2xl font-semibold text-foreground">Forgot password?</CardTitle>
+                        <CardDescription className="text-muted-foreground text-sm lg:text-base">
                             Enter your email address and we'll send you a link to reset your password
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-6">
+                    <CardContent className="space-y-4 lg:space-y-6 px-4 lg:px-6">
                         <Form {...form}>
                             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                                 <FormField
@@ -170,35 +170,35 @@ export default function ForgotPassword() {
                                     name="email"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-white font-medium flex items-center gap-2">
-                                                <Mail className="text-neutral-400 w-4 h-4" /> Email
+                                            <FormLabel className="text-foreground font-medium flex items-center gap-2 text-sm lg:text-base">
+                                                <Mail className="text-muted-foreground w-4 h-4" /> Email
                                             </FormLabel>
                                             <FormControl>
                                                 <div className="relative">
-                                                    <Mail className="absolute left-3 top-3 h-4 w-4 text-neutral-500" />
+                                                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                                     <Input
                                                         placeholder="Enter your email"
                                                         type="email"
                                                         {...field}
                                                         disabled={isLoading}
-                                                        className="pl-10 h-12 bg-black border border-neutral-700 text-white placeholder-neutral-500 focus:ring-2 focus:ring-white/40 transition disabled:opacity-50"
+                                                        className="pl-10 h-11 lg:h-12 bg-input border border-border text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-ring transition disabled:opacity-50 text-sm lg:text-base"
                                                     />
                                                 </div>
                                             </FormControl>
-                                            <FormMessage className="text-yellow-400" />
+                                            <FormMessage className="text-red-400 text-xs lg:text-sm" />
                                         </FormItem>
                                     )}
                                 />
 
                                 <motion.div
-                                    whileHover={{ scale: 1.03 }}
-                                    whileTap={{ scale: 0.97 }}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
                                     className="pt-2"
                                 >
                                     <Button 
                                         type="submit" 
                                         disabled={isLoading}
-                                        className="w-full h-12 bg-white text-black font-bold shadow hover:bg-neutral-200 transition disabled:opacity-50"
+                                        className="w-full h-11 lg:h-12 bg-emerald-500 text-white font-semibold shadow hover:bg-emerald-600 transition disabled:opacity-50 text-sm lg:text-base"
                                     >
                                         {isLoading ? "Sending..." : "Send Reset Link"}
                                     </Button>
@@ -206,10 +206,10 @@ export default function ForgotPassword() {
                             </form>
                         </Form>
                         
-                        <div className="text-center">
+                        <div className="text-center pt-4">
                             <Link
                                 href="/login"
-                                className="inline-flex items-center gap-2 text-sm text-yellow-400 hover:text-yellow-300 underline"
+                                className="inline-flex items-center gap-2 text-sm text-emerald-500 hover:text-emerald-400 underline"
                             >
                                 <ArrowLeft className="w-4 h-4" />
                                 Back to login

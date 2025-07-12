@@ -203,12 +203,12 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-zinc-900 border-zinc-800 text-white">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-popover border-border text-popover-foreground">
         <DialogHeader>
           <DialogTitle className="text-emerald-400">
             {isPostCreated ? "Add Options" : "Create New Post"}
           </DialogTitle>
-          <DialogDescription className="text-zinc-400">
+          <DialogDescription className="text-muted-foreground">
             {isPostCreated
               ? "Add two options for your dilemma."
               : "Are you confused? Just post it and let the community help you decide!"}
@@ -223,15 +223,15 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white">Title</FormLabel>
+                    <FormLabel className="text-foreground">Title</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="What's your dilemma?"
-                        className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-400"
+                        className="bg-input border-border text-foreground placeholder:text-muted-foreground"
                         {...field}
                       />
                     </FormControl>
-                    <FormDescription className="text-zinc-400">
+                    <FormDescription className="text-muted-foreground">
                       A clear, concise title for your dilemma.
                     </FormDescription>
                     <FormMessage className="text-red-400" />
@@ -245,15 +245,15 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white">Description</FormLabel>
+                    <FormLabel className="text-foreground">Description</FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="Describe your situation in detail..."
-                        className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-400 min-h-[100px]"
+                        className="bg-input border-border text-foreground placeholder:text-muted-foreground min-h-[100px]"
                         {...field}
                       />
                     </FormControl>
-                    <FormDescription className="text-zinc-400">
+                    <FormDescription className="text-muted-foreground">
                       Provide context and details about your dilemma.
                     </FormDescription>
                     <FormMessage className="text-red-400" />
@@ -267,14 +267,14 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white">Category</FormLabel>
+                    <FormLabel className="text-foreground">Category</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger className="bg-zinc-800 border-zinc-700 text-white">
+                        <SelectTrigger className="bg-input border-border text-foreground">
                           <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="bg-zinc-800 border-zinc-700 text-white">
+                      <SelectContent className="bg-popover border-border text-popover-foreground">
                         <SelectItem value="career">Career</SelectItem>
                         <SelectItem value="relationship">Relationship</SelectItem>
                         <SelectItem value="education">Education</SelectItem>
@@ -286,7 +286,7 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
                         <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
                     </Select>
-                    <FormDescription className="text-zinc-400">
+                    <FormDescription className="text-muted-foreground">
                       Choose the category that best fits your dilemma.
                     </FormDescription>
                     <FormMessage className="text-red-400" />
@@ -300,15 +300,15 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
                 name="expireAt"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel className="text-white">Expire At</FormLabel>
+                    <FormLabel className="text-foreground">Expire At</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
                             variant="outline"
                             className={cn(
-                              "w-full pl-3 text-left font-normal bg-zinc-800 border-zinc-700 text-white",
-                              !field.value && "text-zinc-400"
+                              "w-full pl-3 text-left font-normal bg-input border-border text-foreground",
+                              !field.value && "text-muted-foreground"
                             )}
                           >
                             {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
@@ -316,7 +316,7 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-zinc-900 border-zinc-700 text-white">
+                      <PopoverContent className="w-auto p-0 bg-popover border-border text-popover-foreground">
                         <Calendar
                           mode="single"
                           selected={field.value}
@@ -325,7 +325,7 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
                         />
                       </PopoverContent>
                     </Popover>
-                    <FormDescription className="text-zinc-400">
+                    <FormDescription className="text-muted-foreground">
                       When should this post expire?
                     </FormDescription>
                     <FormMessage className="text-red-400" />
@@ -340,16 +340,16 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
                 name="image"
                 render={() => (
                   <FormItem>
-                    <FormLabel className="text-white">Image (Optional)</FormLabel>
+                    <FormLabel className="text-foreground">Image (Optional)</FormLabel>
                     <FormControl>
                       <div className="space-y-4">
-                        <label htmlFor="image-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-zinc-700 border-dashed rounded-lg cursor-pointer bg-zinc-800 hover:bg-zinc-700 transition-colors">
+                        <label htmlFor="image-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-border border-dashed rounded-lg cursor-pointer bg-muted hover:bg-muted/80 transition-colors">
                           <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                            <Upload className="w-8 h-8 mb-4 text-zinc-400" />
-                            <p className="mb-2 text-sm text-zinc-400">
+                            <Upload className="w-8 h-8 mb-4 text-muted-foreground" />
+                            <p className="mb-2 text-sm text-muted-foreground">
                               <span className="font-semibold">Click to upload</span> or drag and drop
                             </p>
-                            <p className="text-xs text-zinc-500">PNG, JPG, GIF up to 10MB</p>
+                            <p className="text-xs text-muted-foreground">PNG, JPG, GIF up to 10MB</p>
                           </div>
                           <input
                             id="image-upload"
@@ -366,7 +366,7 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
                         )}
                       </div>
                     </FormControl>
-                    <FormDescription className="text-zinc-400">
+                    <FormDescription className="text-muted-foreground">
                       Add an image to help illustrate your dilemma.
                     </FormDescription>
                     <FormMessage className="text-red-400" />
@@ -380,7 +380,7 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
                   type="button"
                   variant="outline"
                   onClick={onClose}
-                  className="border-zinc-700 text-white hover:bg-zinc-800"
+                  className="border-border text-foreground hover:bg-muted"
                   disabled={isSubmitting}
                 >
                   Cancel
@@ -398,22 +398,22 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
         ) : (
           <form onSubmit={handleOptionSubmit} className="space-y-6">
             <div>
-              <label className="block text-white mb-2">Option 1</label>
+              <label className="block text-foreground mb-2">Option 1</label>
               <Input
                 value={option1}
                 onChange={e => setOption1(e.target.value)}
                 placeholder="First option"
-                className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-400"
+                className="bg-input border-border text-foreground placeholder:text-muted-foreground"
                 required
               />
             </div>
             <div>
-              <label className="block text-white mb-2">Option 2</label>
+              <label className="block text-foreground mb-2">Option 2</label>
               <Input
                 value={option2}
                 onChange={e => setOption2(e.target.value)}
                 placeholder="Second option"
-                className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-400"
+                className="bg-input border-border text-foreground placeholder:text-muted-foreground"
                 required
               />
             </div>
@@ -430,7 +430,7 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
                   setSelectedImage(null);
                   onClose();
                 }}
-                className="border-zinc-700 text-white hover:bg-zinc-800"
+                className="border-border text-foreground hover:bg-muted"
                 disabled={isOptionSubmitting}
               >
                 Cancel

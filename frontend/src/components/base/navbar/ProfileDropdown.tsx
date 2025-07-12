@@ -44,17 +44,17 @@ export default function ProfileDropdown({ user }: ProfileDropdownProps) {
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="relative flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-zinc-800 to-zinc-700 text-white transition-all duration-300 hover:from-zinc-700 hover:to-zinc-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-black"
+          className="relative flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-foreground transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-background"
         >
           <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center">
             <span className="text-sm font-bold text-black">{initials}</span>
           </div>
-          <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-black" />
+          <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-background" />
         </motion.button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
-        className="w-56 bg-zinc-900 border-zinc-800 text-white"
+        className="w-56 bg-popover border-border text-popover-foreground"
         align="end"
         sideOffset={5}
       >
@@ -65,29 +65,29 @@ export default function ProfileDropdown({ user }: ProfileDropdownProps) {
             </div>
             <div>
               <p className="font-semibold">{user.name}</p>
-              <p className="text-xs text-zinc-400">@{user.email|| "user"}</p>
+              <p className="text-xs text-muted-foreground">@{user.email|| "user"}</p>
             </div>
           </div>
         </DropdownMenuLabel>
 
-        <DropdownMenuSeparator className="bg-zinc-800" />
+        <DropdownMenuSeparator className="bg-border" />
 
-        <DropdownMenuItem className="focus:bg-zinc-800 focus:text-white cursor-pointer">
+        <DropdownMenuItem className="focus:bg-muted focus:text-foreground cursor-pointer">
           <UserCircle className="mr-2 h-4 w-4" />
           <span>Profile</span>
         </DropdownMenuItem>
 
-        <DropdownMenuItem className="focus:bg-zinc-800 focus:text-white cursor-pointer">
+        <DropdownMenuItem className="focus:bg-muted focus:text-foreground cursor-pointer">
           <Settings className="mr-2 h-4 w-4" />
           <span>Settings</span>
         </DropdownMenuItem>
 
-        <DropdownMenuItem className="focus:bg-zinc-800 focus:text-white cursor-pointer">
+        <DropdownMenuItem className="focus:bg-muted focus:text-foreground cursor-pointer">
           <Bell className="mr-2 h-4 w-4" />
           <span>Notifications</span>
         </DropdownMenuItem>
 
-        <DropdownMenuSeparator className="bg-zinc-800" />
+        <DropdownMenuSeparator className="bg-border" />
 
         <DropdownMenuItem 
           className="focus:bg-red-900 focus:text-red-100 cursor-pointer text-red-400" 

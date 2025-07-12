@@ -72,6 +72,15 @@ router.get("/", authMiddleware, async (req: Request, res: Response) => {
         const post = await prisma.post.findMany({
             where: {
                 user_id: req.user.id
+            },
+            include: {
+                Option: {
+                    select: {
+                        id: true,
+                        option: true,
+                        count: true
+                    }
+                }
             }
         })
 
