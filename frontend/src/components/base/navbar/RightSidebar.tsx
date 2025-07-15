@@ -32,7 +32,7 @@ export default function RightSidebar() {
   const [selectedCategory, setSelectedCategory] = useState("all")
 
   return (
-    <aside className="fixed right-0 top-0 h-full w-80 bg-background border-l border-border flex flex-col py-8 z-40 shadow-2xl shadow-black/20 dark:shadow-white/5 hidden lg:flex">
+    <aside className="fixed right-0 top-0 h-full w-80 bg-background border-l border-border flex flex-col py-8 z-40 hidden lg:flex">
       {/* Search Bar */}
       <div className="px-6 mb-8">
         <div className="relative">

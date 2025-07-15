@@ -328,55 +328,62 @@ export default function EnhancedTimeline({ initialData }: EnhancedTimelineProps)
       <main className="lg:ml-64 lg:mr-80 min-h-screen">
         {/* Header */}
         <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-xl border-b border-border/50">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between px-4 lg:px-8 py-4 lg:py-8 gap-4">
-            <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-6">
-              {/* Breadcrumb */}
-              <Breadcrumb className="mb-2 lg:mb-0" />
-              
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="flex items-center gap-4"
+          <div className="px-4 lg:px-8 py-4 lg:py-6">
+            {/* Main Header Row */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-4">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="flex items-center gap-4"
+                >
+                  <div className="flex flex-col">
+                    <h1 className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight">Timeline</h1>
+                    <p className="text-sm text-muted-foreground">Discover and vote on trending topics</p>
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Refresh Button */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted/50 text-foreground hover:bg-muted/70 transition-all duration-300 border border-border/50 hover:border-border"
               >
-                <div className="flex flex-col">
-                  <h1 className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight">Timeline</h1>
-                  <p className="text-sm text-muted-foreground mt-1">Discover and vote on trending topics</p>
+                <div className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}>
+                  {isRefreshing ? (
+                    <div className="w-4 h-4 border-2 border-foreground/20 border-t-foreground rounded-full" />
+                  ) : (
+                    <div className="w-4 h-4 border-2 border-foreground/40 border-t-foreground rounded-full" />
+                  )}
                 </div>
-              </motion.div>
+                <span className="text-sm font-medium hidden sm:inline">{isRefreshing ? "Refreshing..." : "Refresh"}</span>
+              </motion.button>
+            </div>
+
+            {/* Secondary Info Row */}
+            <div className="flex items-center justify-between">
+              {/* Breadcrumb */}
+              <Breadcrumb className="text-xs lg:text-sm" />
               
+              {/* Stats */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="flex items-center gap-2 lg:gap-3 flex-wrap"
+                className="flex items-center gap-2"
               >
-                <div className="flex items-center gap-2 px-3 lg:px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
                   <div className="h-2 w-2 bg-emerald-400 rounded-full animate-pulse" />
-                  <span className="text-xs lg:text-sm font-medium text-emerald-400">Live Updates</span>
+                  <span className="text-xs font-medium text-emerald-400">Live</span>
                 </div>
                 
-                <div className="flex items-center gap-2 px-3 lg:px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20">
-                  <span className="text-xs lg:text-sm font-medium text-blue-400">{posts.length} Posts</span>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20">
+                  <span className="text-xs font-medium text-blue-400">{posts.length} Posts</span>
                 </div>
               </motion.div>
             </div>
-
-            {/* Enhanced Refresh Button */}
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-              className="flex items-center gap-3 px-4 lg:px-6 py-2 lg:py-3 rounded-xl bg-muted/50 text-foreground hover:bg-muted/70 transition-all duration-300 border border-border/50 hover:border-border self-start lg:self-auto"
-            >
-              <div className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}>
-                {isRefreshing ? (
-                  <div className="w-4 h-4 border-2 border-foreground/20 border-t-foreground rounded-full" />
-                ) : (
-                  <div className="w-4 h-4 border-2 border-foreground/40 border-t-foreground rounded-full" />
-                )}
-              </div>
-              <span className="text-sm font-medium">{isRefreshing ? "Refreshing..." : "Refresh"}</span>
-            </motion.button>
           </div>
         </div>
 
