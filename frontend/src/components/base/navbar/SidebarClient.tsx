@@ -48,20 +48,20 @@ export default function SidebarClient({ user }: SidebarClientProps) {
         isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
       } lg:translate-x-0`}>
         {/* Logo */}
-        <Link href="/" className="mb-10 flex items-center justify-center group" onClick={() => setIsMobileMenuOpen(false)}>
+        <Link href="/" className="mb-8 flex items-center justify-center group" onClick={() => setIsMobileMenuOpen(false)}>
           <motion.div
             initial={{ opacity: 0, x: 8 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4, delay: 0.5 }}
             className="relative text-center px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20"
           >
-            <span className="text-2xl font-bold text-foreground tracking-wider block">V/S</span>
-            <span className="text-xs text-emerald-400 mt-1 block">Vote & Share</span>
+            <span className="text-2xl font-bold text-foreground tracking-wider block">VERSUS</span>
+            <span className="text-xs text-emerald-400 mt-1 block"></span>
           </motion.div>
         </Link>
 
         {/* Navigation Items */}
-        <nav className="flex flex-col gap-1 flex-1 px-6">
+        <nav className="flex flex-col gap-1 px-6 flex-1">
           {isAuthenticated && (
             <>
               <SidebarItem href="/" icon={Home} title="Home" isActive onClick={() => setIsMobileMenuOpen(false)} />
@@ -70,75 +70,57 @@ export default function SidebarClient({ user }: SidebarClientProps) {
               <SidebarItem href="/bookmarks" icon={Bookmark} title="Bookmarks" onClick={() => setIsMobileMenuOpen(false)} />
 
               {/* Create Post Button */}
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="mt-4 mb-3">
+              <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} className="mt-3 mb-2">
                 <button
                   onClick={() => {
                     setIsCreateDialogOpen(true)
                     setIsMobileMenuOpen(false)
                   }}
-                  className="group relative flex w-full items-center justify-center rounded-xl bg-muted/30 text-foreground py-3 px-4 transition-all duration-300 hover:bg-muted/50 active:scale-95"
+                  className="group flex w-full items-center justify-center rounded-lg bg-emerald-500 text-white py-2 px-3 font-semibold shadow hover:bg-emerald-600 transition-all duration-200 active:scale-95"
                 >
-                  <Plus size={20} strokeWidth={2.5} className="mr-2" />
-                  <span className="font-semibold">Create Post</span>
+                  <Plus size={18} strokeWidth={2.5} className="mr-2" />
+                  <span>Create Post</span>
                 </button>
               </motion.div>
 
               {/* Divider */}
-              <div className="w-full h-px bg-gradient-to-r from-transparent via-border to-transparent my-3" />
-
-              {/* Notifications */}
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <button className="group relative flex w-full items-center justify-center rounded-xl text-foreground py-3 px-4 transition-all duration-300 hover:bg-muted/30">
-                  <Bell size={18} strokeWidth={2} className="mr-3" />
-                  <span className="font-medium">Notifications</span>
-                  <div className="absolute top-3 right-4 h-2.5 w-2.5 bg-red-500 rounded-full animate-pulse border border-background shadow-sm" />
-                </button>
-              </motion.div>
-
-              {/* Settings */}
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <button className="group relative flex w-full items-center justify-center rounded-xl text-foreground py-3 px-4 transition-all duration-300 hover:bg-muted/30">
-                  <Settings size={18} strokeWidth={2} className="mr-3" />
-                  <span className="font-medium">Settings</span>
-                </button>
-              </motion.div>
-
-              {/* Theme Toggle */}
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="mt-1">
-                <div className="flex w-full items-center justify-center rounded-xl py-3 px-4">
-                  <ThemeToggle />
-                </div>
-              </motion.div>
+              <div className="w-full h-px bg-border my-2" />
             </>
+          )}
+          {!isAuthenticated && (
+            <Link href="/login" className="w-full" onClick={() => setIsMobileMenuOpen(false)}>
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                className="group flex w-full items-center justify-center rounded-lg bg-emerald-500 text-white px-3 py-2 font-semibold shadow hover:bg-emerald-600 transition-all duration-200 relative overflow-hidden"
+              >
+                <LogIn size={16} strokeWidth={2.5} className="mr-2" />
+                <span>Login</span>
+              </motion.button>
+            </Link>
           )}
         </nav>
 
-        {/* Profile Section */}
-        <div className="mt-auto flex flex-col items-center w-full px-6">
-          {isAuthenticated ? (
+        {/* Theme Toggle - centered, no label */}
+        <div className="flex justify-center w-full pb-2">
+          <ThemeToggle />
+        </div>
+
+        {/* Profile Section at bottom */}
+        {isAuthenticated && (
+          <div className="flex flex-col items-center w-full px-6 pb-2">
             <div className="w-full">
-              <div className="flex items-center gap-3 mb-3">
+              <div className="flex items-center gap-2">
                 <div className="flex-shrink-0">
                   <ProfileDropdown user={(user || session?.user) as any} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-muted-foreground">@{session?.user?.email?.split('@')[0] || 'user'}</p>
+                  <p className="text-xs text-muted-foreground">@{session?.user?.email?.split('@')[0] || 'user'}</p>
                 </div>
               </div>
             </div>
-          ) : (
-            <Link href="/login" className="w-full" onClick={() => setIsMobileMenuOpen(false)}>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="group flex w-full items-center justify-center rounded-xl bg-muted/30 text-foreground px-4 py-3 font-semibold transition-all duration-300 hover:bg-muted/50 relative overflow-hidden"
-              >
-                <LogIn size={16} strokeWidth={2.5} className="mr-2" />
-                <span className="tracking-wide">Login</span>
-              </motion.button>
-            </Link>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Create Post Dialog */}
         {isAuthenticated && <CreatePostDialog isOpen={isCreateDialogOpen} onClose={() => setIsCreateDialogOpen(false)} />}
@@ -157,23 +139,23 @@ interface SidebarItemProps {
 
 function SidebarItem({ href, icon: Icon, title, isActive, onClick }: SidebarItemProps) {
   return (
-    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full">
+    <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} className="w-full">
       <Link
         href={href}
         onClick={onClick}
-        className={`group relative flex w-full items-center rounded-xl transition-all duration-300 py-3 px-4
+        className={`group flex w-full items-center rounded-lg transition-all duration-200 py-2 px-3 font-medium text-sm
           ${
             isActive
-              ? "bg-muted/50 text-foreground"
-              : "text-foreground hover:bg-muted/30"
+              ? "bg-muted/60 text-foreground shadow"
+              : "text-foreground hover:bg-muted/40"
           }`}
       >
-        <Icon size={18} strokeWidth={2} className="mr-3" />
-        <span className="font-medium">{title}</span>
+        <Icon size={17} strokeWidth={2} className="mr-2" />
+        <span>{title}</span>
         {isActive && (
           <motion.div
             layoutId="activeIndicator"
-            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-foreground rounded-full"
+            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-emerald-500 rounded-full"
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
           />
         )}
