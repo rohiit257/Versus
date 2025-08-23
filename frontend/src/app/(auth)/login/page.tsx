@@ -37,6 +37,7 @@ const formSchema = z.object({
 export default function Login() {
     const [showPassword, setShowPassword] = React.useState(false)
     const [isLoading, setIsLoading] = React.useState(false)
+    const [submitMessage, setSubmitMessage] = React.useState<string | null>(null)
     const router = useRouter()
 
     const {data:session} = useSession()
@@ -57,6 +58,7 @@ export default function Login() {
 
     const onSubmit = async (data: z.infer<typeof formSchema>) => {
         setIsLoading(true)
+        setSubmitMessage(null)
         
         try {
             console.log('🚀 Starting login process...')
@@ -76,7 +78,13 @@ export default function Login() {
 
             if (result?.error) {
                 console.error('❌ Authentication failed:', result.error)
-                toast.error(`Authentication failed: ${result.error}`)
+                // Check for not verified error
+                if (result.error.includes("verify your email")) {
+                    setSubmitMessage("Your email is not verified. Please check your inbox.")
+                    toast.error("Your email is not verified. Please check your inbox.")
+                } else {
+                    toast.error(`Authentication failed: ${result.error}`)
+                }
             } else if (result?.ok) {
                 console.log('✅ Authentication successful!')
                 toast.success("Successfully signed in!")
@@ -117,6 +125,16 @@ export default function Login() {
                     <CardContent className="space-y-4 lg:space-y-6 px-4 lg:px-6">
                         <Form {...form}>
                             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                                {/* Inline error for not verified */}
+                                {submitMessage && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="p-3 rounded-lg text-sm font-medium bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800 mb-2"
+                                    >
+                                        {submitMessage}
+                                    </motion.div>
+                                )}
                                 <FormField
                                     control={form.control}
                                     name="email"

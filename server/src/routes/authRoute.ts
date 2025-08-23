@@ -69,6 +69,10 @@ router.post("/login", authlimiter , async (req:Request,res:Response) =>{
             return res.status(422).json({message:"User not found with this email"})
         }
 
+        if(user.email_verified_at === null){
+            return res.status(422).json({message:"Please verify your email first"})
+        }
+
         const isPasswordValid = await bcrypt.compare(payload.password, user.password)
 
         if(!isPasswordValid){
@@ -98,6 +102,7 @@ router.post("/login", authlimiter , async (req:Request,res:Response) =>{
         res.status(500).json({ message: "Internal server error" });
     }
 })
+
 
 router.get("/user" , authMiddleware , async (req:Request,res:Response) =>{
     const user = req.user

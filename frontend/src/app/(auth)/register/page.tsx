@@ -142,28 +142,28 @@ export default function Register() {
                 transition={{ duration: 0.6, ease: "easeOut" }}
                 className="w-full max-w-md"
             >
-                <Card className="bg-card border border-border shadow-2xl rounded-2xl">
-                    <CardHeader className="text-center space-y-2 pb-6 lg:pb-8">
+                <Card className="bg-card border border-border shadow-lg rounded-xl">
+                    <CardHeader className="text-center space-y-2 pb-4 lg:pb-6">
                         <motion.div
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                            className="flex justify-center mb-4"
+                            className="flex justify-center mb-3"
                         >
-                            <CheckCircle2 className="text-emerald-500 text-4xl bg-emerald-100 dark:bg-emerald-900/20 rounded-full border-2 border-emerald-200 dark:border-emerald-800 p-2" />
+                            <CheckCircle2 className="text-emerald-500 text-3xl bg-emerald-100 dark:bg-emerald-900/20 rounded-full border-2 border-emerald-200 dark:border-emerald-800 p-1.5" />
                         </motion.div>
-                        <CardTitle className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight">Create Account</CardTitle>
-                        <CardDescription className="text-muted-foreground mt-2 text-sm lg:text-base">Join Versus and start your journey</CardDescription>
+                        <CardTitle className="text-2xl font-bold text-foreground tracking-tight">Create Account</CardTitle>
+                        <CardDescription className="text-muted-foreground mt-1 text-sm">Join Versus and start your journey</CardDescription>
                     </CardHeader>
-                    <CardContent className="px-4 lg:px-6">
+                    <CardContent className="px-3 lg:px-5">
                         <Form {...form}>
-                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 lg:space-y-6">
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                                 {/* Display success/error message */}
                                 {submitMessage && (
                                     <motion.div
                                         initial={{ opacity: 0, y: -10 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        className={`p-3 rounded-lg text-sm font-medium ${
+                                        className={`p-2 rounded text-xs font-medium ${
                                             submitMessage.type === 'success' 
                                                 ? 'bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800' 
                                                 : 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800'
