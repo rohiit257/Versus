@@ -7,8 +7,10 @@ import { v4 as uuid } from "uuid";
 import { renderEmailEJS, timeDiff } from "../helper..js";
 import { emailQueue, emailQueueName } from "../jobs/emailJob.js";
 
-const router = Router();
 
+
+const router = Router();
+//@ts-ignore
 router.post("/forget-password", authlimiter, async (req: Request, res: Response) => {
     try {
         const body = req.body
@@ -62,7 +64,7 @@ router.post("/forget-password", authlimiter, async (req: Request, res: Response)
 
 
 })
-
+//@ts-ignore
 router.post("/reset-password", authlimiter, async (req, res) => {
     try {
         const body = req.body

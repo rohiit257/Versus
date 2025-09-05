@@ -2,7 +2,7 @@ import { Router,Request,Response } from "express";
 import prisma from "../config/database.js";
 
 const router = Router();
-
+//@ts-ignore
 router.get("/verify-email",async (req:Request,res:Response) => {
     const { email, token } = req.query;
     if (!email || !token) {

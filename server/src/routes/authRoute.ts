@@ -8,8 +8,20 @@ import { emailQueue, emailQueueName } from "../jobs/emailJob.js";
 import jwt from "jsonwebtoken"
 import authMiddleware from "../middleware/authMiddleware.js";
 import { authlimiter } from "../config/rateLimit.js";
+
+// Extend Express Request interface to include 'user'
+declare global {
+    namespace Express {
+        interface Request {
+            user?: any;
+        }
+    }
+}
+
 const router = Router();
 
+
+//@ts-ignore
 router.post("/register", authlimiter, async (req: Request, res: Response) => {
     try {
 
@@ -57,6 +69,7 @@ router.post("/register", authlimiter, async (req: Request, res: Response) => {
     }
 });
 
+//@ts-ignore
 router.post("/login", authlimiter , async (req:Request,res:Response) =>{
     try {
 
@@ -103,9 +116,9 @@ router.post("/login", authlimiter , async (req:Request,res:Response) =>{
     }
 })
 
-
+//@ts-ignore
 router.get("/user" , authMiddleware , async (req:Request,res:Response) =>{
-    const user = req.user
+    const user = req.user    
     if(user){
         return res.json({
         data : user

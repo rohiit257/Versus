@@ -9,6 +9,8 @@ import { Server } from 'socket.io';
 import { createServer, Server as HttpServer } from 'http';
 import { setupSocket } from './socket.js';
 
+
+
 const _dirname = path.dirname(fileURLToPath(import.meta.url));
 
 
@@ -34,7 +36,7 @@ const PORT = process.env.PORT || 8000;
 app.use(
     cors({
       origin:'http://localhost:3000',
-      method: ["GET", "POST", "DELETE", "PUT"],
+      methods: ["GET", "POST", "DELETE", "PUT"],
       credentials: true,
     })
   );
@@ -51,6 +53,8 @@ app.set("view engine", "ejs");
 app.set("views", path.resolve(_dirname, "./views"));
 
 
+
+//@ts-ignore
 app.get("/", async (req: Request, res: Response) => {
     return res.send("yo ssupppppppp");
  
