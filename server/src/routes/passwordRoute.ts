@@ -86,7 +86,7 @@ router.post("/reset-password", authlimiter, async (req, res) => {
             })
         }
 
-        const hoursDiff = timeDiff(user.token_send_at!)
+        const hoursDiff = timeDiff(user.token_send_at!)();
 
         if (hoursDiff > 2) {
             return res.json({
