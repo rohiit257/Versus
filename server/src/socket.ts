@@ -140,10 +140,10 @@ async function getUpdatedVoteCounts(postId: string | number) {
         }
         
         const options = post.Option || [];
-        const total = options.reduce((sum, opt) => sum + opt.count, 0);
+        const total = options.reduce((sum: number, opt: { count: number }) => sum + opt.count, 0);
         
         return {
-            options: options.map(opt => ({
+            options: options.map((opt: { id: number, option: string, count: number }) => ({
                 id: opt.id,
                 option: opt.option,
                 count: opt.count
@@ -177,7 +177,7 @@ async function getUpdatedComments(postId: string | number) {
             }
         });
         
-        return comments.map(comment => ({
+        return comments.map((comment: { id: number, comment: string, created_at: Date, user?: { id: number, name: string, email: string } | null }) => ({
             id: comment.id,
             content: comment.comment,
             created_at: comment.created_at,

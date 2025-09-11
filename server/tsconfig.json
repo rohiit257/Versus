@@ -10,5 +10,5 @@
       "types": ["node"],
       "strict": true
     },
-    "include": ["src"]
+    "include": ["src/**/*"]
   }
