@@ -1,6 +1,6 @@
 "use client"
 
-import React from 'react'
+import React, { Suspense } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from "react-hook-form"
 import { z } from 'zod'
@@ -38,7 +38,7 @@ const formSchema = z.object({
     path: ["confirmPassword"],
 })
 
-export default function ResetPassword() {
+function ResetPassword() {
     const [showPassword, setShowPassword] = React.useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)
     const [isLoading, setIsLoading] = React.useState(false)
@@ -310,5 +310,13 @@ export default function ResetPassword() {
                 </Card>
             </motion.div>
         </div>
+    )
+}
+
+export default function ResetPasswordPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <ResetPassword />
+        </Suspense>
     )
 }
