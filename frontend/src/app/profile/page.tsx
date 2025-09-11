@@ -35,7 +35,7 @@ export default function ProfilePage() {
       setLoading(true);
       setError("");
       try {
-        const res = await axios.get("http://localhost:8000/api/post/v1", {
+        const res = await axios.get("https://versus-server-latest.onrender.com/api/post/v1", {
           headers: { Authorization: user?.token },
         });
         setPosts(res.data.data || []);

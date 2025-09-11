@@ -87,7 +87,7 @@ export default function Register() {
                 return
             }
             
-            const response = await axios.post("http://localhost:8000/api/auth/v1/register", cleanedData, {
+            const response = await axios.post("https://versus-server-latest.onrender.com/api/auth/v1/register", cleanedData, {
                 headers: {
                     'Content-Type': 'application/json',
                 },

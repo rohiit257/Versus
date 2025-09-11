@@ -69,7 +69,7 @@ export default function ResetPassword() {
             }
             
             // Replace this with your actual password reset API call
-            const response = await axios.post('http://localhost:8000/api/auth/v1/reset-password', {
+            const response = await axios.post('https://versus-server-latest.onrender.com/api/auth/v1/reset-password', {
                 email: data.email,
                 password: data.password,
                 confirmPassword: data.confirmPassword,

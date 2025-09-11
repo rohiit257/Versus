@@ -142,7 +142,7 @@ function usePosts(initialData?: any) {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch("http://localhost:8000/api/post/v1/all");
+      const response = await fetch("https://versus-server-latest.onrender.com/api/post/v1/all");
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }

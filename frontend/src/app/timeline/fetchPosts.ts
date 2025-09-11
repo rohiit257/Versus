@@ -1,5 +1,5 @@
 export async function fetchPosts() {
-  const res = await fetch("http://localhost:8000/api/post/v1/all", {
+  const res = await fetch("https://versus-server-latest.onrender.com/api/post/v1/all", {
     next: { revalidate: 5 },
     cache: "reload",
   });

@@ -15,7 +15,7 @@ class SocketManager {
 
   connect(): Socket {
     if (!this.socket || !this.socket.connected) {
-      this.socket = io('http://localhost:8000', {
+      this.socket = io('https://versus-server-latest.onrender.com', {
         transports: ['websocket'],
         autoConnect: true,
         reconnection: true,

@@ -53,7 +53,7 @@ export default function ForgotPassword() {
             console.log('📧 Reset data:', { email: data.email })
             
             // Replace this with your actual password reset API call
-            const response = await axios.post('http://localhost:8000/api/auth/v1/forget-password', {
+            const response = await axios.post('https://versus-server-latest.onrender.com/api/auth/v1/forget-password', {
                 email: data.email,
             })
 
