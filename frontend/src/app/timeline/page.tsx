@@ -236,8 +236,8 @@ type EnhancedTimelineProps = {
   initialData?: any;
 };
 
-export default function EnhancedTimeline({ initialData }: EnhancedTimelineProps) {
-  const { posts, loading, error, refetch } = usePosts(initialData);
+export default function Page() {
+  const { posts, loading, error, refetch } = usePosts();
   const [isRefreshing, setIsRefreshing] = useState(false)
   const { data: session } = useSession();
   const user = session?.user as { id?: string | number } | undefined;
