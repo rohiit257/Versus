@@ -23,15 +23,18 @@ export const authOptions: AuthOptions = {
     },
 
     callbacks: {
-        async session({ session, token }: { session: customSession, token: JWT }) {
-            session.user = token.user as customUser
-            return session
-        },
-        async jwt({ token, user }: { token: JWT, user?: customUser }) {
-            if (user) {
-                token.user = user
+        async session({ session, token }) {
+            // Cast session.user to your custom type if needed
+            if (token.user) {
+                session.user = token.user as any; // or as customUser
             }
-            return token
+            return session;
+        },
+        async jwt({ token, user }) {
+            if (user) {
+                token.user = user;
+            }
+            return token;
         }
     },
 
