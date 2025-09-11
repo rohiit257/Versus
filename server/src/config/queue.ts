@@ -3,11 +3,12 @@ import { ConnectionOptions, DefaultJobOptions } from "bullmq";
 
 
 export const redisConnection: ConnectionOptions = {
+  
+  url: process.env.REDIS_URL,
   //@ts-ignore
-  connectionString: process.env.REDIS_URL,  
   socket: {
-    tls: true,                             
-    rejectUnauthorized: false,             
+    tls: true,
+    rejectUnauthorized: false,
   },
 };
 
