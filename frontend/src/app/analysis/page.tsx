@@ -183,7 +183,7 @@ export default function AnalysisPage() {
       changeLabel: "This week",
     },
     {
-      title: "Total Options",
+      title: "Total Votes",
       value: stats.totalOptions,
       icon: Activity,
       color: "text-blue-500",

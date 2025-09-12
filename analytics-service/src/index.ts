@@ -114,7 +114,8 @@ app.get('/getComments', verifyToken, async (req: AuthRequest, res) => {
       console.log("💬 [COMMENTS] Requested by user:", req.userId);
   
       const comments = await prisma.comments.findMany({
-        where: { user_id: req.userId! }   
+        where: { user_id: req.userId! }, 
+        orderBy: { created_at: 'desc' }
       });
   
       res.json({
