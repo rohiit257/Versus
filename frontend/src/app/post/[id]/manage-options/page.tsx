@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { ArrowLeft, Loader2 } from "lucide-react";
+import { BACKEND_URL } from "@/lib/apiEndPoints";
 
 // Types
 interface customUser {
@@ -48,7 +49,7 @@ export default function ManageOptionsPage() {
       setLoading(true);
       setError("");
       try {
-        const res = await axios.get(`https://versus-server-latest.onrender.com/api/post/v1/${postId}`, {
+        const res = await axios.get(`${BACKEND_URL}/api/post/v1/${postId}`, {
           headers: { Authorization: user?.token },
         });
         setPost(res.data.data);
@@ -157,7 +158,7 @@ export default function ManageOptionsPage() {
         throw new Error("Exactly 2 unique options are required");
       }
       await axios.post(
-        "https://versus-server-latest.onrender.com/api/post/v1/add-options",
+        `${BACKEND_URL}/api/post/v1/add-options`,
         {
           post_id: postId,
           option1: validOptions[0],
@@ -169,7 +170,7 @@ export default function ManageOptionsPage() {
       );
       toast.success("Options added successfully!");
       // Refetch post/options
-      const res = await axios.get(`https://versus-server-latest.onrender.com/api/post/v1/${postId}`, {
+      const res = await axios.get(`${BACKEND_URL}/api/post/v1/${postId}`, {
         headers: { Authorization: user?.token },
       });
       setPost(res.data.data);

@@ -47,6 +47,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { BACKEND_URL } from "@/lib/apiEndPoints";
 
 
 const formSchema = z.object({
@@ -118,7 +119,7 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
       formData.append("expire_at", values.expireAt.toISOString());
       formData.append("image", selectedImage);
 
-      const response = await axios.post("https://versus-server-latest.onrender.com/api/post/v1", formData, {
+      const response = await axios.post(`${BACKEND_URL}/api/post/v1`, formData, {
         headers: {
           Authorization: user.token,
           "Content-Type": "multipart/form-data",
@@ -172,7 +173,7 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
     setIsOptionSubmitting(true);
     try {
       await axios.post(
-        "https://versus-server-latest.onrender.com/api/post/add-options",
+        `${BACKEND_URL}/api/post/add-options`,
         {
           post_id: postId,
           option1,

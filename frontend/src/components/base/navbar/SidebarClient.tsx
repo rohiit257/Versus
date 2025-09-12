@@ -3,7 +3,7 @@ import { motion } from "framer-motion"
 import type React from "react"
 
 import Link from "next/link"
-import { Home, Plus, TrendingUp, Bell, User, LogIn, Settings, Bookmark, Menu, X } from "lucide-react"
+import { Home, Plus, TrendingUp, Bell, User, LogIn, Settings, Bookmark, Menu, X, ChartLine } from "lucide-react"
 import { useState } from "react"
 import type { customUser } from "@/app/api/auth/[...nextauth]/options"
 import CreatePostDialog from "./CreatePostDialog"
@@ -68,6 +68,7 @@ export default function SidebarClient({ user }: SidebarClientProps) {
               <SidebarItem href="/timeline" icon={TrendingUp} title="Timeline" onClick={() => setIsMobileMenuOpen(false)} />
               <SidebarItem href="/profile" icon={User} title="Profile" onClick={() => setIsMobileMenuOpen(false)} />
               <SidebarItem href="/bookmarks" icon={Bookmark} title="Bookmarks" onClick={() => setIsMobileMenuOpen(false)} />
+              <SidebarItem href="/analysis" icon={ChartLine} title="Analysis" onClick={() => setIsMobileMenuOpen(false)} />
 
               {/* Create Post Button */}
               <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} className="mt-3 mb-2">

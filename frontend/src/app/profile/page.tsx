@@ -5,6 +5,7 @@ import Link from "next/link";
 import axios from "axios";
 import SidebarClient from "@/components/base/navbar/SidebarClient";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { BACKEND_URL } from "@/lib/apiEndPoints";
 
 // Types
 interface customUser {
@@ -35,7 +36,7 @@ export default function ProfilePage() {
       setLoading(true);
       setError("");
       try {
-        const res = await axios.get("https://versus-server-latest.onrender.com/api/post/v1", {
+        const res = await axios.get(`${BACKEND_URL}/api/post/v1`, {
           headers: { Authorization: user?.token },
         });
         setPosts(res.data.data || []);

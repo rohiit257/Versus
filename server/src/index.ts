@@ -87,6 +87,7 @@ server.listen(PORT, () => {
 import authRoute from './routes/authRoute.js';
 import verifyemailRoute from './routes/verifyEmailRoutes.js';
 import { emailQueue } from './jobs/emailJob.js';
+
 import passwordRoute from './routes/passwordRoute.js'
 import postRoute from './routes/postRoute.js'
 import authMiddleware from './middleware/authMiddleware.js';
