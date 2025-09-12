@@ -41,6 +41,8 @@ interface CategoryData {
   percentage: number
 }
 
+type token = string
+
 export default function AnalysisPage() {
   const { data: session, status } = useSession()
   const [loading, setLoading] = useState(true)
@@ -120,10 +122,10 @@ export default function AnalysisPage() {
         // Calculate percentages and format data
         const totalPosts = Object.values(categoryCounts).reduce((sum, count) => sum + count, 0)
         const processedCategoryData: CategoryData[] = Object.entries(categoryCounts).map(([category, count]) => ({
-          category: category.charAt(0).toUpperCase() + category.slice(1), // Capitalize first letter
+          category: category.charAt(0).toUpperCase() + category.slice(1), 
           count,
           percentage: totalPosts > 0 ? Math.round((count / totalPosts) * 100) : 0
-        })).sort((a, b) => b.count - a.count) // Sort by count descending
+        })).sort((a, b) => b.count - a.count) 
 
         setCategoryData(processedCategoryData)
       } catch (err) {
