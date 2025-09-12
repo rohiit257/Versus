@@ -20,7 +20,7 @@ const server:HttpServer = createServer(app)
 
 const io = new Server(server,{
   cors:{
-    origin:'http://localhost:3000'
+    origin:'https://versus-chat.vercel.app'
   }
 })
 
@@ -35,7 +35,7 @@ const PORT = process.env.PORT || 8000;
 
 app.use(
     cors({
-      origin:'http://localhost:3000',
+      origin:'https://versus-chat.vercel.app',
       methods: ["GET", "POST", "DELETE", "PUT"],
       credentials: true,
     })
