@@ -11,7 +11,6 @@ import SidebarClient from "@/components/base/navbar/SidebarClient"
 import RightSidebar from "@/components/base/navbar/RightSidebar"
 import TimelinePost from "@/components/base/TimeLinePost"
 import { Breadcrumb } from "@/components/ui/breadcrumb"
-import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { BACKEND_URL } from "@/lib/apiEndPoints"
 

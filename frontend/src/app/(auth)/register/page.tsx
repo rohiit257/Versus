@@ -95,8 +95,8 @@ export default function Register() {
             })
             
             if (response.status === 200 || response.status === 201) {
-                setSubmitMessage({ type: 'success', message: 'Registration successful!' })
-                toast("Registration successful")
+                setSubmitMessage({ type: 'success', message: 'Registration successful! Please check your email for verification' })
+                toast("Registration successful Please check your email for verification")
                 
                 form.reset()
                 

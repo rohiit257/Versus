@@ -1,6 +1,6 @@
 "use client"
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from "react-hook-form"
 import { z } from 'zod'
@@ -44,9 +44,12 @@ export default function Login() {
 
     const user = session?.user as {token?:string} | undefined
 
-    if(user){
-        redirect("/timeline")
-    }
+    // Use useEffect to handle navigation after render
+    useEffect(() => {
+        if(user){
+            router.push("/timeline")
+        }
+    }, [user, router])
     
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),

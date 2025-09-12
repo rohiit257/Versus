@@ -3,7 +3,19 @@ import { motion } from "framer-motion"
 import type React from "react"
 
 import Link from "next/link"
-import { Home, Plus, TrendingUp, Bell, User, LogIn, Settings, Bookmark, Menu, X, ChartLine, MessageCircle, FileQuestionMark } from "lucide-react"
+import {
+  Home,
+  Plus,
+  TrendingUp,
+  User,
+  LogIn,
+  Bookmark,
+  Menu,
+  X,
+  Baseline as ChartLine,
+  MessageCircle,
+  FileQuestion as FileQuestionMark,
+} from "lucide-react"
 import { useState } from "react"
 import type { customUser } from "@/app/api/auth/[...nextauth]/options"
 import CreatePostDialog from "./CreatePostDialog"
@@ -35,98 +47,138 @@ export default function SidebarClient({ user }: SidebarClientProps) {
 
   return (
     <>
-      {/* Mobile Menu Button */}
       <button
         onClick={toggleMobileMenu}
-        className="fixed top-4 left-4 z-50 lg:hidden p-2 rounded-lg bg-background border border-border shadow-lg"
+        className="fixed top-6 left-6 z-50 p-3 rounded-xl bg-white/95 dark:bg-background border border-gray-200/60 dark:border-border shadow-lg backdrop-blur-sm lg:hidden transition-all duration-200 hover:shadow-xl"
       >
-        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
 
       {/* Mobile Menu Overlay */}
-      {isMobileMenuOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={toggleMobileMenu}
-        />
-      )}
+      {isMobileMenuOpen && <div className="fixed inset-0 bg-black/30 z-40 lg:hidden" onClick={toggleMobileMenu} />}
 
-      {/* Sidebar */}
-      <aside className={`fixed left-0 top-0 h-full w-64 bg-background/98 backdrop-blur-xl border-r border-border/30 flex flex-col z-40 shadow-2xl shadow-black/10 dark:shadow-white/5 transform transition-transform duration-300 lg:translate-x-0 ${
-        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-      } lg:translate-x-0`}>
-        {/* Profile Section at top */}
+      <aside
+        className={`fixed left-0 top-0 h-full w-64 bg-white/98 dark:bg-background backdrop-blur-xl border-r border-gray-200/60 dark:border-border flex flex-col z-40 transition-transform duration-300 shadow-xl
+          ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
+      >
         {isAuthenticated && (
-          <div className="px-5 pt-5 pb-3">
-            <div className="flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-br from-emerald-500/5 to-emerald-600/5 border border-emerald-500/10 shadow-sm hover:shadow-md transition-all duration-300">
-              <div className="flex-shrink-0">
-                <ProfileDropdown user={(user || session?.user) as any} />
-              </div>
+          <div className="p-6 border-b border-gray-200/60 dark:border-border">
+            <div className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50/80 dark:bg-muted backdrop-blur-sm">
+              <ProfileDropdown user={(user || session?.user) as any} />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground truncate">
-                  {session?.user?.name || 'User'}
+                <p className="text-sm font-semibold text-gray-900 dark:text-foreground truncate leading-tight">
+                  {session?.user?.name || "User"}
                 </p>
-                <p className="text-xs text-emerald-600 dark:text-emerald-400 truncate font-medium">
-                  @{session?.user?.email?.split('@')[0] || 'user'}
+                <p className="text-xs text-gray-500 dark:text-muted-foreground truncate font-medium mt-1">
+                  @{session?.user?.email?.split("@")[0] || "user"}
                 </p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Navigation Items */}
-        <nav className="flex flex-col gap-1 px-3 flex-1">
+        <nav className="flex flex-col px-4 py-6 flex-1 gap-2">
           {isAuthenticated && (
             <>
-              <SidebarItem href="/" icon={Home} title="Home" isActive={isActive("/")} onClick={() => setIsMobileMenuOpen(false)} />
-              <SidebarItem href="/timeline" icon={TrendingUp} title="Timeline" isActive={isActive("/timeline")} onClick={() => setIsMobileMenuOpen(false)} />
-              <SidebarItem href="/profile" icon={User} title="Profile" isActive={isActive("/profile")} onClick={() => setIsMobileMenuOpen(false)} />
-              <SidebarItem href="/bookmarks" icon={Bookmark} title="Bookmarks" isActive={isActive("/bookmarks")} onClick={() => setIsMobileMenuOpen(false)} />
-              <SidebarItem href="/analysis" icon={ChartLine} title="Analysis" isActive={isActive("/analysis")} onClick={() => setIsMobileMenuOpen(false)} />
-              <SidebarItem href="/Chat" icon={MessageCircle} title="Chat" isActive={isActive("/Chat")} onClick={() => setIsMobileMenuOpen(false)} />
-              <SidebarItem href="/FAQ" icon={FileQuestionMark} title="FAQ" isActive={isActive("/FAQ")} onClick={() => setIsMobileMenuOpen(false)} />
+              <div className="space-y-1">
+                <SidebarItem
+                  href="/"
+                  icon={Home}
+                  title="Home"
+                  isActive={isActive("/")}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                />
+                <SidebarItem
+                  href="/timeline"
+                  icon={TrendingUp}
+                  title="Timeline"
+                  isActive={isActive("/timeline")}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                />
+                <SidebarItem
+                  href="/profile"
+                  icon={User}
+                  title="Profile"
+                  isActive={isActive("/profile")}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                />
+                <SidebarItem
+                  href="/bookmarks"
+                  icon={Bookmark}
+                  title="Bookmarks"
+                  isActive={isActive("/bookmarks")}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                />
+              </div>
 
-              {/* Create Post Button */}
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="mt-3 mb-2">
-                <button
+              <div className="py-4">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => {
                     setIsCreateDialogOpen(true)
                     setIsMobileMenuOpen(false)
                   }}
-                  className="group flex w-full items-center justify-center rounded-2xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 py-2.5 px-4 font-semibold shadow-sm hover:shadow-md transition-all duration-300 border border-blue-500/20"
+                  className="flex w-full items-center justify-center rounded-2xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 py-4 px-6 font-semibold transition-all duration-200 gap-3"
                 >
-                  <Plus size={16} strokeWidth={2} className="mr-2" />
+                  <Plus size={18} />
                   <span>Create Post</span>
-                </button>
-              </motion.div>
+                </motion.button>
+              </div>
 
-              {/* Divider */}
-              <div className="w-full h-px bg-gradient-to-r from-transparent via-border/40 to-transparent my-2 mx-3" />
+              <div className="w-full h-px bg-gray-200/60 dark:bg-border my-4" />
+
+              <div className="space-y-1 ">
+                <SidebarItem
+                  href="/analysis"
+                  icon={ChartLine}
+                  title="Analysis"
+                  isActive={isActive("/analysis")}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                />
+                <SidebarItem
+                  href="/Chat"
+                  icon={MessageCircle}
+                  title="Chat"
+                  isActive={isActive("/Chat")}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                />
+                <SidebarItem
+                  href="/FAQ"
+                  icon={FileQuestionMark}
+                  title="FAQ"
+                  isActive={isActive("/FAQ")}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                />
+              </div>
             </>
           )}
           {!isAuthenticated && (
-            <Link href="/login" className="w-full" onClick={() => setIsMobileMenuOpen(false)}>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="group flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-4 py-2.5 font-semibold shadow-lg hover:shadow-emerald-500/25 transition-all duration-300 relative overflow-hidden"
-              >
-                <LogIn size={16} strokeWidth={2} className="mr-2" />
-                <span>Login</span>
-              </motion.button>
-            </Link>
+            <div className="px-2">
+              <Link href="/login" className="w-full" onClick={() => setIsMobileMenuOpen(false)}>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex w-full items-center justify-center rounded-2xl bg-green-500 hover:bg-green-600 text-white py-4 px-6 font-semibold transition-all duration-200 gap-3 shadow-lg"
+                >
+                  <LogIn size={18} />
+                  <span>Login</span>
+                </motion.button>
+              </Link>
+            </div>
           )}
         </nav>
 
-        {/* Theme Toggle at bottom */}
-        <div className="px-4 pb-3">
-          <div className="flex justify-center p-1.5 rounded-xl bg-muted/20 border border-border/20">
+        <div className="p-3 border-t border-gray-200/60 dark:border-border mt-auto">
+          <div className="flex justify-center p-3 rounded-2xl bg-gray-50/80 dark:bg-muted backdrop-blur-sm">
             <ThemeToggle />
           </div>
         </div>
 
         {/* Create Post Dialog */}
-        {isAuthenticated && <CreatePostDialog isOpen={isCreateDialogOpen} onClose={() => setIsCreateDialogOpen(false)} />}
+        {isAuthenticated && (
+          <CreatePostDialog isOpen={isCreateDialogOpen} onClose={() => setIsCreateDialogOpen(false)} />
+        )}
       </aside>
     </>
   )
@@ -142,24 +194,24 @@ interface SidebarItemProps {
 
 function SidebarItem({ href, icon: Icon, title, isActive, onClick }: SidebarItemProps) {
   return (
-    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full">
+    <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }} className="relative">
       <Link
         href={href}
         onClick={onClick}
-        className={`group relative flex w-full items-center rounded-2xl transition-all duration-300 py-2.5 px-4 font-medium text-sm
+        className={`group flex w-full items-center rounded-xl transition-all duration-200 py-3 px-4 text-sm font-medium gap-4 relative
           ${
             isActive
-              ? "bg-gradient-to-r from-emerald-500/10 to-emerald-600/5 text-emerald-600 dark:text-emerald-400 shadow-sm border border-emerald-500/20"
-              : "text-foreground hover:bg-muted/40 hover:border-border/20 hover:shadow-sm"
+              ? "bg-gray-100/80 dark:bg-muted text-gray-900 dark:text-foreground shadow-sm"
+              : "text-gray-600 dark:text-muted-foreground hover:bg-gray-50/80 dark:hover:bg-muted/50 hover:text-gray-900 dark:hover:text-foreground"
           }`}
       >
-        <Icon size={16} strokeWidth={2} className="mr-3" />
-        <span className="font-medium text-sm">{title}</span>
+        <Icon size={18} className="flex-shrink-0" />
+        <span className="leading-tight">{title}</span>
         {isActive && (
           <motion.div
             layoutId="activeIndicator"
-            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-7 bg-gradient-to-b from-emerald-500 to-emerald-600 rounded-full shadow-sm"
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 w-2 h-2 bg-green-500 rounded-full shadow-sm"
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
           />
         )}
       </Link>

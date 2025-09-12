@@ -62,6 +62,7 @@ export default function AnalysisPage() {
 
   useEffect(() => {
     const fetchData = async () => {
+      //@ts-ignore
       if (!session?.user?.token) {
         console.warn("No token in session")
         setLoading(false)
@@ -71,6 +72,7 @@ export default function AnalysisPage() {
       try {
         // Fetch stats
         const statsRes = await axios.get("http://localhost:8001/stats", {
+          //@ts-ignore
           headers: { Authorization: `${session.user.token}`},
         })
 
@@ -85,6 +87,7 @@ export default function AnalysisPage() {
 
         // Fetch real comments from API
         const commentsRes = await axios.get("http://localhost:8001/getComments", {
+          //@ts-ignore
           headers: { Authorization: `${session.user.token}`},
         })
 
@@ -104,6 +107,7 @@ export default function AnalysisPage() {
 
         // Fetch real category data from API
         const categoryRes = await axios.get("http://localhost:8001/getCategoryData", {
+          //@ts-ignore
           headers: { Authorization: ` ${session.user.token}`},
         })
 
