@@ -129,4 +129,16 @@ app.get('/getComments', verifyToken, async (req: AuthRequest, res) => {
     }
   });
   
-
+app.get('/getCategoryData', verifyToken, async (req: AuthRequest, res) => {
+    try {
+      console.log("💬 [CATEGORY] Requested by user:", req.userId);
+      const categoryData = await prisma.post.findMany({
+        where: { user_id: req.userId! },
+        select: { category: true }
+      });
+      res.json({ categoryData });
+    } catch (error) {
+      console.error("❌ [CATEGORY] Query failed:", error);
+      res.status(500).json({ message: "Database query failed", error });
+    }
+  });

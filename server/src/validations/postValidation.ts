@@ -5,7 +5,7 @@ export const PostScheme = z.object({
     description:z.string({message:"Description is Required"}).min(10).max(2500),
     category:z.string({message:"Category Is Required"}),
     expire_at : z.string({message:"expired at is required"}).min(5),
-    image:z.string().optional()
+  
 
 
 })

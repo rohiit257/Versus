@@ -16,24 +16,7 @@ router.post("/", authMiddleware, async (req: Request, res: Response) => {
     // 🧪 Validate request body using Zod
     const payload = PostScheme.parse(body);
 
-    // 📷 Handle image validation
-    const image = req.files?.image as UploadedFile | undefined;
-
-    if (!image) {
-      return res.status(422).json({
-        errors: { image: "Image field is required" },
-      });
-    }
-
-    const imageError = imageValidator(image.size, image.mimetype);
-    if (imageError) {
-      return res.status(422).json({
-        errors: { image: imageError },
-      });
-    }
-
-    // ⬆️ Upload image and attach to payload
-    payload.image = await uploadImage(image);
+  
 
     // 💾 Create post in DB
     const createdPost = await prisma.post.create({

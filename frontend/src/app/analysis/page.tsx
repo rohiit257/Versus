@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { BarChart3, MessageSquare, ArrowUpRight, Activity } from "lucide-react"
+import { BarChart3, MessageSquare, ArrowUpRight, Activity, PieChart } from "lucide-react"
 import SidebarClient from "@/components/base/navbar/SidebarClient"
 import { useSession } from "next-auth/react"
 import {
@@ -35,12 +35,10 @@ interface Comment {
   likes: number
 }
 
-interface VoteLog {
-  id: string
-  postTitle: string
-  option: string
-  user: string
-  createdAt: string
+interface CategoryData {
+  category: string
+  count: number
+  percentage: number
 }
 
 export default function AnalysisPage() {
@@ -58,7 +56,7 @@ export default function AnalysisPage() {
     commentsThisWeek: 0,
   })
   const [comments, setComments] = useState<Comment[]>([])
-  const [voteLogs, setVoteLogs] = useState<VoteLog[]>([])
+  const [categoryData, setCategoryData] = useState<CategoryData[]>([])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -102,16 +100,32 @@ export default function AnalysisPage() {
 
         setComments(apiComments)
 
-        // Keep mock vote logs for now (no API endpoint yet)
-        setVoteLogs([
-          {
-            id: "1",
-            postTitle: "Best Programming Languages 2024",
-            option: "Python",
-            user: "alex_smith",
-            createdAt: "1 hour ago",
-          },
-        ])
+        // Fetch real category data from API
+        const categoryRes = await axios.get("http://localhost:8001/getCategoryData", {
+          headers: { Authorization: ` ${session.user.token}`},
+        })
+
+        console.log("Category API response:", categoryRes.data)
+
+        // Process category data
+        const rawCategories = categoryRes.data.categoryData || []
+        const categoryCounts: { [key: string]: number } = {}
+        
+        // Count occurrences of each category
+        rawCategories.forEach((item: any) => {
+          const category = item.category
+          categoryCounts[category] = (categoryCounts[category] || 0) + 1
+        })
+
+        // Calculate percentages and format data
+        const totalPosts = Object.values(categoryCounts).reduce((sum, count) => sum + count, 0)
+        const processedCategoryData: CategoryData[] = Object.entries(categoryCounts).map(([category, count]) => ({
+          category: category.charAt(0).toUpperCase() + category.slice(1), // Capitalize first letter
+          count,
+          percentage: totalPosts > 0 ? Math.round((count / totalPosts) * 100) : 0
+        })).sort((a, b) => b.count - a.count) // Sort by count descending
+
+        setCategoryData(processedCategoryData)
       } catch (err) {
         console.error("Error fetching stats:", err)
       } finally {
@@ -297,24 +311,74 @@ export default function AnalysisPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-blue-500" />
-                  Recent Votes
+                  <PieChart className="w-5 h-5 text-blue-500" />
+                  Post Categories
                 </CardTitle>
                 <CardDescription>
-                  Latest voting activity across posts
+                  Distribution of your posts by category
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {voteLogs.map((vote) => (
-                  <div
-                    key={vote.id}
-                    className="border-l-4 border-blue-500 pl-4 py-2"
-                  >
-                    <p className="text-sm">
-                      {vote.user} voted {vote.option} on {vote.postTitle}
-                    </p>
+                {categoryData.length > 0 ? (
+                  <div className="space-y-4">
+                    {/* Simple pie chart representation */}
+                    <div className="flex items-center justify-center mb-4">
+                      <div className="relative w-32 h-32">
+                        {categoryData.map((item, index) => {
+                          const colors = [
+                            "bg-emerald-500",
+                            "bg-blue-500", 
+                            "bg-purple-500",
+                            "bg-orange-500",
+                            "bg-red-500",
+                            "bg-yellow-500"
+                          ]
+                          const startAngle = categoryData.slice(0, index).reduce((acc, curr) => acc + (curr.percentage * 3.6), 0)
+                          const endAngle = startAngle + (item.percentage * 3.6)
+                          
+                          return (
+                            <div
+                              key={item.category}
+                              className={`absolute w-full h-full rounded-full ${colors[index % colors.length]} opacity-80`}
+                              style={{
+                                clipPath: `polygon(50% 50%, ${50 + 50 * Math.cos((startAngle - 90) * Math.PI / 180)}% ${50 + 50 * Math.sin((startAngle - 90) * Math.PI / 180)}%, ${50 + 50 * Math.cos((endAngle - 90) * Math.PI / 180)}% ${50 + 50 * Math.sin((endAngle - 90) * Math.PI / 180)}%)`
+                              }}
+                            />
+                          )
+                        })}
+                      </div>
+                    </div>
+                    
+                    {/* Legend */}
+                    <div className="space-y-2">
+                      {categoryData.map((item, index) => {
+                        const colors = [
+                          "bg-emerald-500",
+                          "bg-blue-500", 
+                          "bg-purple-500",
+                          "bg-orange-500",
+                          "bg-red-500",
+                          "bg-yellow-500"
+                        ]
+                        return (
+                          <div key={item.category} className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-3 h-3 rounded-full ${colors[index % colors.length]}`} />
+                              <span className="text-foreground">{item.category}</span>
+                            </div>
+                            <div className="text-muted-foreground">
+                              {item.count} ({item.percentage}%)
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
                   </div>
-                ))}
+                ) : (
+                  <p className="text-muted-foreground text-center py-4">
+                    No category data available
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>

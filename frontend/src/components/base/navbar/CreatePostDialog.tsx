@@ -57,7 +57,7 @@ const formSchema = z.object({
   expireAt: z.date({
     required_error: "Please select an expiration date",
   }),
-  image: z.any().optional(),
+
 });
 
 interface CreatePostDialogProps {
@@ -86,17 +86,11 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
       description: "",
       category: "",
       expireAt: undefined,
-      image: null,
+  
     },
   });
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setSelectedImage(file);
-      form.setValue("image", file);
-    }
-  };
+
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!user || !user.token) {
@@ -104,10 +98,7 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
       return;
     }
 
-    if (!selectedImage) {
-      toast.error("Image is required");
-      return;
-    }
+    
 
     setIsSubmitting(true);
 
@@ -117,11 +108,11 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
       formData.append("description", String(values.description));
       formData.append("category", String(values.category));
       formData.append("expire_at", values.expireAt.toISOString());
-      formData.append("image", selectedImage);
+    
 
       const response = await axios.post(`${BACKEND_URL}/api/post/v1`, formData, {
         headers: {
-          Authorization: user.token,
+          Authorization: ` ${user.token}`,
           "Content-Type": "multipart/form-data",
         },
       });
@@ -141,8 +132,8 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
       // onClose();
     } catch (error: any) {
       console.error("Error creating post:", error);
-      if (error.response?.status === 422 && error.response.data.errors?.image) {
-        toast.error(`Image Error: ${error.response.data.errors.image}`);
+      if (error.response?.status === 422 ) {
+        toast.error(`Image Error: ${error.response.data.errors}`);
       } else if (error.response) {
         toast.error(`Error: ${error.response.data.message || "Failed to create post"}`);
       } else if (error.request) {
@@ -173,7 +164,7 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
     setIsOptionSubmitting(true);
     try {
       await axios.post(
-        `${BACKEND_URL}/api/post/add-options`,
+        `${BACKEND_URL}/api/post/v1/add-options`,
         {
           post_id: postId,
           option1,
@@ -181,7 +172,7 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
         },
         {
           headers: {
-            Authorization: user.token,
+            Authorization: ` ${user.token}`,
           },
         }
       );
@@ -335,45 +326,6 @@ export default function CreatePostDialog({ isOpen, onClose }: CreatePostDialogPr
               />
 
 
-              {/* Image Upload */}
-              <FormField
-                control={form.control}
-                name="image"
-                render={() => (
-                  <FormItem>
-                    <FormLabel className="text-foreground">Image (Optional)</FormLabel>
-                    <FormControl>
-                      <div className="space-y-4">
-                        <label htmlFor="image-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-border border-dashed rounded-lg cursor-pointer bg-muted hover:bg-muted/80 transition-colors">
-                          <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                            <Upload className="w-8 h-8 mb-4 text-muted-foreground" />
-                            <p className="mb-2 text-sm text-muted-foreground">
-                              <span className="font-semibold">Click to upload</span> or drag and drop
-                            </p>
-                            <p className="text-xs text-muted-foreground">PNG, JPG, GIF up to 10MB</p>
-                          </div>
-                          <input
-                            id="image-upload"
-                            type="file"
-                            className="hidden"
-                            accept="image/*"
-                            onChange={handleImageChange}
-                          />
-                        </label>
-                        {selectedImage && (
-                          <div className="text-sm text-emerald-400">
-                            Selected: {selectedImage.name}
-                          </div>
-                        )}
-                      </div>
-                    </FormControl>
-                    <FormDescription className="text-muted-foreground">
-                      Add an image to help illustrate your dilemma.
-                    </FormDescription>
-                    <FormMessage className="text-red-400" />
-                  </FormItem>
-                )}
-              />
 
               {/* Submit Button */}
               <div className="flex justify-end space-x-4 pt-4">

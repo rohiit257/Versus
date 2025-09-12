@@ -50,7 +50,7 @@ export default function ManageOptionsPage() {
       setError("");
       try {
         const res = await axios.get(`${BACKEND_URL}/api/post/v1/${postId}`, {
-          headers: { Authorization: user?.token },
+          headers: { Authorization: `Bearer ${user?.token}` },
         });
         setPost(res.data.data);
         // If post already has options, fill them in
