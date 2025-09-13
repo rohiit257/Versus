@@ -22,6 +22,10 @@ RUN npx prisma generate --schema=src/prisma/schema.prisma
 # Build TypeScript to dist
 RUN npm run build
 
+# Verify Prisma client was generated and built files exist
+RUN ls -la src/generated/prisma/ && echo "Prisma client generated successfully"
+RUN ls -la dist/ && echo "Build output exists"
+
 # Stage 2: Production
 FROM node:20-alpine AS runner
 
@@ -43,6 +47,9 @@ RUN npm ci --only=production --ignore-scripts && \
 COPY --from=builder --chown=analytics:nodejs /app/dist ./dist
 COPY --from=builder --chown=analytics:nodejs /app/src/generated ./dist/generated
 COPY --from=builder --chown=analytics:nodejs /app/node_modules/@prisma ./node_modules/@prisma
+
+# Verify the Prisma client is in the correct location
+RUN ls -la /app/dist/generated/prisma/ || echo "Prisma client not found in expected location"
 
 # Create .env file with required environment variables
 # Note: In production, use Docker secrets or environment variables instead

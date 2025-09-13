@@ -108,7 +108,7 @@ export default function AnalysisPage() {
         // Fetch real category data from API
         const categoryRes = await axios.get("https://analytics-server-latest.onrender.com/getCategoryData", {
           //@ts-ignore
-          headers: { Authorization: ` ${session.user.token}`},
+          headers: { Authorization: `${session.user.token}`},
         })
 
         console.log("Category API response:", categoryRes.data)

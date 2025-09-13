@@ -19,15 +19,57 @@ if (!process.env.SECRET_KEY) {
   process.exit(1)
 }
 
+if (!process.env.DATABASE_URL) {
+  console.error("❌ [SERVER] CRITICAL: DATABASE_URL environment variable is required!")
+  process.exit(1)
+}
+
+// Test database connection
+async function testDatabaseConnection() {
+  try {
+    console.log("🔌 [DATABASE] Testing database connection...")
+    await prisma.$connect()
+    console.log("✅ [DATABASE] Database connection successful")
+    
+    // Test a simple query
+    const userCount = await prisma.user.count()
+    console.log("✅ [DATABASE] Database query test successful, user count:", userCount)
+  } catch (error) {
+    console.error("❌ [DATABASE] Database connection failed:", {
+      error: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined
+    })
+    process.exit(1)
+  }
+}
+
+// Test database connection on startup
+testDatabaseConnection()
+
 app.use(express.json())
 app.use(
     cors({
-      origin:'https://versus-chat.vercel.app/',
-      methods: ["GET", "POST", "DELETE", "PUT"],
-      credentials: true,
+      origin: 'https://versus-chat.vercel.app',
+    
     })
   );
 const PORT = process.env.PORT || 8001
+
+// Global error handler
+app.use((error: any, req: any, res: any, next: any) => {
+  console.error("❌ [GLOBAL_ERROR] Unhandled error:", {
+    error: error instanceof Error ? error.message : "Unknown error",
+    stack: error instanceof Error ? error.stack : undefined,
+    url: req.url,
+    method: req.method
+  })
+  
+  res.status(500).json({
+    message: "Internal server error",
+    status: 500,
+    timestamp: new Date().toISOString()
+  })
+})
 
 app.listen(PORT,()=>{
     console.log(`🚀 [SERVER] Analytics Server Running On http://localhost:${PORT}`)
@@ -110,24 +152,24 @@ app.get('/stats', verifyToken, async(req:AuthRequest,res)=>{
 
 
 app.get('/getComments', verifyToken, async (req: AuthRequest, res) => {
-    try {
-      console.log("💬 [COMMENTS] Requested by user:", req.userId);
-  
-      const comments = await prisma.comments.findMany({
-        where: { user_id: req.userId! }, 
-        orderBy: { created_at: 'desc' }
-      });
-  
-      res.json({
-        comments,
-        count: comments.length,
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error("❌ [COMMENTS] Query failed:", error);
-      res.status(500).json({ message: "Database query failed", error });
-    }
-  });
+  try {
+    console.log("💬 [COMMENTS] Requested by user:", req.userId);
+
+    const comments = await prisma.comments.findMany({
+      where: { user_id: req.userId! }, 
+      orderBy: { created_at: 'desc' }
+    });
+
+    res.json({
+      comments,
+      count: comments.length,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error("❌ [COMMENTS] Query failed:", error);
+    res.status(500).json({ message: "Database query failed", error });
+  }
+});
   
 app.get('/getCategoryData', verifyToken, async (req: AuthRequest, res) => {
     try {
