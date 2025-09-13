@@ -71,7 +71,7 @@ export default function AnalysisPage() {
 
       try {
         // Fetch stats
-        const statsRes = await axios.get("http://localhost:8001/stats", {
+        const statsRes = await axios.get("https://analytics-server-latest.onrender.com/stats", {
           //@ts-ignore
           headers: { Authorization: `${session.user.token}`},
         })
@@ -86,7 +86,7 @@ export default function AnalysisPage() {
         }))
 
         // Fetch real comments from API
-        const commentsRes = await axios.get("http://localhost:8001/getComments", {
+        const commentsRes = await axios.get("https://analytics-server-latest.onrender.com/getComments", {
           //@ts-ignore
           headers: { Authorization: `${session.user.token}`},
         })
@@ -106,7 +106,7 @@ export default function AnalysisPage() {
         setComments(apiComments)
 
         // Fetch real category data from API
-        const categoryRes = await axios.get("http://localhost:8001/getCategoryData", {
+        const categoryRes = await axios.get("https://analytics-server-latest.onrender.com/getCategoryData", {
           //@ts-ignore
           headers: { Authorization: ` ${session.user.token}`},
         })

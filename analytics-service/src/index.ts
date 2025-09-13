@@ -1,8 +1,8 @@
 
 import express, { type Application, type Response } from 'express'
-import prisma from './config/db.ts'
+import prisma from './config/db.js'
 import cors from 'cors'
-import { verifyToken, type AuthRequest } from "./middleware/verifyToken.ts"
+import { verifyToken, type AuthRequest } from "./middleware/verifyToken.js"
 import dotenv from "dotenv";
 dotenv.config();
 const app:Application = express()
@@ -22,7 +22,7 @@ if (!process.env.SECRET_KEY) {
 app.use(express.json())
 app.use(
     cors({
-      origin:'http://localhost:3000',
+      origin:'https://versus-chat.vercel.app/',
       methods: ["GET", "POST", "DELETE", "PUT"],
       credentials: true,
     })

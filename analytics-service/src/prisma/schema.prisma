@@ -29,6 +29,7 @@ model Post {
   id         Int      @id
   user_id    Int
   title      String
+  category   String
   created_at DateTime @default(now())
 
   Comments Comments[]
